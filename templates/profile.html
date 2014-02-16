@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load organization_tags %}
+
+
+{% block left_side_bar %}
+
+    <div class="col-lg-2 well well-sm" style="height: 85%">
+        <div style="padding-bottom: 10px">
+            <img class="img-circle" src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
+                    >
+        </div>
+
+        <div style="padding-bottom: 10px"><h3>{{ org.name }}</h3></div>
+
+        <div class="personal">
+            <div class="list-group">
+                <li  class="list-group-item">
+                    <h4 class="list-group-item-heading">Email</h4>
+                    <p class="list-group-item-text"></p>
+                </li>
+                <li class="list-group-item">
+                    <h4 class="list-group-item-heading">Cell Number</h4>
+                    <p class="list-group-item-text"></p>
+                </li>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}
+{% block content %}
+    <div class="col-lg-10" style="height: 85%">
+
+        <div>
+            <!-- May have to activate javascript, look at bootstrap docs if problem-->
+            <ul id="profile"class="nav nav-pills" style="padding-bottom: 10px">
+                <li class="active"><a href="#info" data-toggle="tab">Info</a></li>
+                <li><a href="#images" data-toggle="tab">Images</a></li>
+                <li><a href="#projects" data-toggle="tab">Projects</a></li>
+                <li><a href="#members" data-toggle="tab">Members</a></li>
+
+                {% has_perm user 'add_project' org as check_admin%}
+                {% if check_admin %}
+                    <li><a href="#pref" data-toggle="tab">Preferences</a></li>
+                {% endif %}
+
+            </ul>
+
+            <div id="profileTabContent" class="tab-content" style="max-height: 90%;overflow: auto">
+                <div class ="tab-pane fade active in" id ="info">
+                    <div class="col-lg-6">
+                        <div class="panel panel-default">
+                            <!-- Default panel contents -->
+                            <div class="panel-heading">{{ org.name }}</div>
+
+                            <!-- Table -->
+                            <table class="table">
+                                <tr>
+                                    <td>Motto</td>
+                                    <td>{{ org.tagline }}</td>
+                                </tr>
+                                <tr>
+                                    <td>When we started</td>
+                                    <td>{{ org.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Our Homepage</td>
+                                    <td><p>{{ org.website }}</p></td>
+                                </tr>
+
+                            </table>
+
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+
+                        <div class="panel panel-default">
+                            <!-- Default panel contents -->
+                            <div class="panel-heading">What is {{ org.name }}</div>
+                            <div class="panel-body">
+
+                                <p>{{ org.description }}</p>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class ="tab-pane fade" id="images">
+                    Images
+                </div>
+                <div class ="tab-pane fade" id ="projects">
+                    {% for proj in org.project_set.all %}
+                        <div class="col-lg-12 well well-sm container">
+
+                            <div class="col-lg-2" style="text-align: center">
+                                <div>
+                                    <h4>{{ proj.name }}</h4>
+                                </div>
+                                <div>
+                                    <img src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=135">
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+
+                                <div class="panel panel-default">
+                                    <!-- Default panel contents -->
+                                    <div class="panel-heading">Project Info</div>
+                                    <table class="table">
+                                        <tr>
+                                            <td>Motto</td>
+                                            <td>{{ proj.tagline }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>When We Started</td>
+                                            <td>{{ proj.start_date }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Status</td>
+                                            <td>{{ proj.status }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Project website</td>
+                                            <td>{{ proj.website }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="panel panel-default">
+
+                                    <div class="panel-heading">
+                                        Description
+                                    </div>
+                                    {{ proj.short_description }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class ="tab-pane fade col-lg-6" id ="members">
+                    <div class="panel panel-default">
+
+                        <div class="panel-heading">Members</div>
+                        <table class="table">
+
+                            <!-- Remove ability not functioning-->
+                            {% for member in org.members.all %}
+                                <tr>
+                                    <td>{{ member.get_full_name }}</td>
+                                    {% has_perm user 'add_member' org as check_admin %}
+                                    {% if check_admin %}
+                                        <td><button type="button" class="btn btn-danger" data-toggle="modal" data-target="#removeModal"><span class ="glyphicon glyphicon-remove"></span></button></td>
+
+
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+
+                        </table>
+                    </div>
+                </div>
+                <div class ="tab-pane fade" id ="pref">
+                    Admin Preferences
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="removeModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Remove user from organization?</h4>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to remove <!-- Look into pass argument to modal later-->
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn  btn-danger">Remove</button>
+                    <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+{% endblock %}
+
+

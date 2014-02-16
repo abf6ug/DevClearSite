@@ -1,0 +1,98 @@
+{% load staticfiles %}
+<html>
+<head>
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}"
+          rel="stylesheet">
+</head>
+<body>
+<div class="navbar navbar-inverse" role="navigation">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!--      <a class="navbar-brand" href="index.html"><img src='http://www.hicomm.co/uploads/3/2/3/4/3234015/newlogo.png'></a>-->
+
+        </div>
+
+
+        <div class="collapse navbar-collapse">
+
+
+        <div class='col-xs-5'>
+            <form class="navbar-form form-search form-inline" role="search">
+                <div class="input-group">
+                    <input type="text" class="form-control search-query" placeholder="Search..." name="srch-term" id="srch-term">
+                    <span class="input-group-btn">
+                      <button class="btn btn-primary" type="submit">Search</button>
+                    </span>
+                </div>
+            </form>
+        </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            {% if user.is_authenticated %}
+
+                <ul class="nav navbar-nav navbar-right navbar-user">
+
+
+
+                    <li><a href="/home/">Home</a></li>
+                    <li class="dropdown messages-dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-envelope"></i> Messages <span class="badge">7</span> <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header">7 New Messages</li>
+                            <li class="message-preview">
+                                <a href="#">
+                                    <span class="avatar"><img src="http://placehold.it/50x50"></span>
+                                    <span class="name">John Smith:</span>
+                                    <span class="message">Hey there, I wanted to ask you something...</span>
+                                    <span class="time"><i class="fa fa-clock-o"></i> 4:34 PM</span>
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+
+                            <li class="divider"></li>
+                            <li><a href="/inbox/">View Inbox <span class="badge">7</span></a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown user-dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i>{{ user.get_full_name}}<b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/profile/"><i class="fa fa-user"></i> Profile</a></li>
+                            <li><a href="/home/inbox/"><i class="fa fa-envelope"></i> Inbox <span class="badge">7</span></a></li>
+                            <li><a href="/home/settings/"><i class="fa fa-gear"></i> Settings</a></li>
+                            <li class="divider"></li>
+                            <li>    <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Log Out</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            {% endif %}
+        </div><!-- /.navbar-collapse -->
+    </div>
+<div class="col-lg-12">
+{% block left_side_bar %}
+
+{% endblock %}
+
+{% block content %}
+
+{% endblock %}
+
+
+{% block right_side_bar %}
+
+{% endblock %}
+</div>
+
+<script src='https://code.jquery.com/jquery.js'></script>
+
+<script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/internationalPhone.js' %}"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+
+        <div class="col-md-8 col-md-offset-2">
+            <div class="col-md-6 well well-sm" style="margin-right: 60px">
+                <form action="{% url "register" %}" class="form-signin" method="post" accept-charset="utf-8" name = "register">
+                    <h3>Register for DevClear!</h3>
+                    <table class="table">
+
+                        <tr><td>Cellphone #: </td><td><input class="form-control" type="text" placeholder="xxx-xxx-xxxx or +xx-xxxx-xxxx" name="username" required></td></tr>
+
+                        <td>Pin:</td><td><input class="form-control" type="password" placeholder="Pin" name="password1" required></td></tr>
+                        <td>Confirm Pin:</td><td><input class="form-control" type="password" placeholder="Confirm Pin" name="password2"  required></td></tr>
+
+                        <td>First Name</td><td><input class="form-control" type="text" placeholder="First Name" name="fn"  required></td></tr>
+                        <td>Last Name</td><td><input class="form-control" type="text" placeholder="Last Name" name="ln" required></td></tr>
+                        <td>Email</td><td><input class="form-control" type="email" placeholder="Email"  name="email"></td></tr>
+                        {% csrf_token %}
+                        <tr><td></td><td></td></tr>
+                    </table>
+
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">Join!</button>
+
+                </form>
+
+
+            </div>
+
+            <div class="col-md-5 well well-sm">
+                <h3>Already have an account?</h3>
+                <a href="{% url "login" %}"><button class="btn btn-lg btn-primary btn-block" href=>Sign in!</button></a>
+
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}

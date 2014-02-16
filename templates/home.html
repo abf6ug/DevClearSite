@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+<div class="row" id="content" style="padding-left: 10px">
+
+    {% block left_side_bar %}
+
+
+        <div class="col-lg-2">
+            <div style="padding-bottom: 10px">
+                <h3> <a href="profile.html"> <img class="img-circle"
+                                                  src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
+                                                  alt="User Pic"> {{ user.first_name }} </a></h3>
+            </div>
+
+            <div class="personal">
+                <div class="list-group">
+                    <li  class="list-group-item">
+                        <h4 class="list-group-item-heading">Email</h4>
+                        <p class="list-group-item-text">{{ user.email }}</p>
+                    </li>
+                    <li class="list-group-item">
+                        <h4 class="list-group-item-heading">Cell Number</h4>
+                        <p class="list-group-item-text">{{ user.username }}</p>
+                    </li>
+                </div>
+            </div>
+
+            <div class="personal">
+                <h3>Organizations</h3>
+                <div class="list-group">
+                    {% for org in  user.organization_set.all%}
+                        <li class="list-group-item">
+                            <h4 class="list-group-item-heading"><a href="/profile/{{ org.name }}/">{{ org.name }}</a></h4>
+                            <p class="list-group-item-text">{{ org.tagline }}</p>
+                        </li>
+                    {% endfor %}
+                </div>
+                <a href={% url "register_org" %} class="btn btn-danger" type="button"
+                data-toggle="tooltip"
+                data-original-title="Edit this user">Register Organization</a>
+            </div>
+        </div>
+
+    {% endblock %}
+
+    {% block content %}
+        <div class="col-lg-8">
+
+            Organization and project feed
+        </div>
+
+    {% endblock %}
+
+
+
+    {% block right_side_bar %}
+        <div class="col-lg-2">
+            <h3> Your Projects </h3>
+            <div class="project">
+              <div class="list-group">
+                    {% for proj in  user.project_set.all%}
+                        <li class="list-group-item">
+                            <h4 class="list-group-item-heading">{{ proj.name }}</a></h4>
+                            <p class="list-group-item-text">{{ proj.sponsor_org.name }}</p>
+                        </li>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="/home/createProject" class="btn btn-danger" type="button"
+               data-toggle="tooltip"
+               data-original-title="Edit this user">New Project</a>
+        </div>
+    {% endblock %}
+</div><!-- /.row -->
+

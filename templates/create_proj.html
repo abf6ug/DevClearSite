@@ -1,0 +1,43 @@
+{%  extends "home.html" %}
+
+{% block content %}
+    <div class="well well-sm col-lg-8">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">Project Info!</div>
+
+                <form action="" class="form-signin" method="post" accept-charset="utf-8" name = "register">
+                    <table>
+                        <tr><td>Name</td><td><input class="form-control" type="text" placeholder="Project" name="name" required></td></tr>
+                        <tr><td>Sponsor Organization</td><td><select name="sponsor"></select></td></tr>
+                        <tr><td>Scale</td><td><input class="form-control" type="text" placeholder="Where is this project located" name="scale"required></td></tr>
+                        <tr><td>Status</td><td><select></select></td></tr>
+                        <tr><td>Tag line</td><td><input class="form-control" type="text" placeholder="What's your organization's motto" name="tagline"  required></td></tr>
+                        <tr><td>Start Date</td><td><input class="form-control" type="date" placeholder="When did this project begin?" name="sdate" required></td></tr>
+                        <tr><td>End Date</td><td><input class="form-control" type="date" placeholder="When is it's projected finish?" name="edate" required></td></tr>
+
+                        <tr><td>Website</td><td><input class="form-control" type="url" placeholder="What's your website?" name="website"required></td></tr>
+                        <tr><td>Short Description</td><td><input class="form-control" type="text" placeholder="Abbreviated Description" name="short"required></td></tr>
+
+                    </table>
+
+            </div>
+
+        </div>
+        <div class="col-lg-6">
+            <div class="panel panel-default" style="">
+                <div class="panel-heading">What is your project?</div>
+                <table class="table">
+                    <tr><td><textarea placeholder="What do you all do?"  name="description" style="width:100%" rows="7"></textarea></td></tr>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            {% csrf_token %}
+            <button class="btn-lg btn-block btn-success" type="submit">Create!</button>
+                </form>
+        </div>
+    </div>
+
+
+{%  endblock %}

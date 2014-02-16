@@ -1,0 +1,14 @@
+{% extends "home.html" %}
+
+{%  block content %}
+  <div class="well well-sm col-lg-8">
+<button onclick="phonenumber('8045144263')">Click me</button>
+<form method="post" action="/inbox/" name='password'> {% csrf_token %}
+        <h4>Change password</h4>
+        <table>{{change_password_form.as_table}}</table>
+        <p>{{password_message}}</p>
+        <p><input type="submit" value="Save Changes" name="change_password"/></p>
+</form>
+<p id="demo"></p>
+  </div>
+{% endblock content %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    {% if user.is_authenticated %}
+
+    {% else %}
+        <div class="row">
+            <div class="col-md-7 col-md-push-1">
+                <h1>HiComm will release its beta in December, 2013.  Get ready!!!</h1>
+                <div class="alert alert-success">
+                    <p> We are a group of students that have founded NGOs, volunteered in communities around the world, and served our fellow citizens to better our communities. And we became frustrated - that our hard work, our community partners' determination, and our resources may end up wasted just because we did not have the tools to communicate and collaborate sustainably. We found that we weren't alone, that other organizations like the World Bank suffered from the same symptoms. </p>
+                    <p>
+                        This isn't just a billion dollar problem, this is a billion person problem.</p>
+                    <p>
+                        HiComm is a team that seeks to enable stakeholders to improve their process of service. We are creating a dynamic information sharing platform that connects and a provides a digital workspace for community members, NGOs, funding agents, and external service providers. We are erasing geographical boundaries, building bridges, facilitating discovery of resources, and creating virtual spaces for mutual growth. In short, we are revolutionizing the process of service, making it easier for us and others to lead a life of service.
+                    </p><p>
+                    We are excited to release our beta later in the year. If you are interested in what we are doing, feel free to contact us using the form below. Bonus - as we build our system, we always appreciate more input on what ails the process of service today - please help us by emailing us on your thoughts. Thanks!
+                </p><p>
+                    Cheers,
+                    The HiComm Team.</p>
+                </div>
+
+
+
+
+            </div>
+
+            <div class="col-md-3">
+                <div class="modal fade" id="loginModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="myModalLabel">Login</h4>
+                            </div>
+                            <div class="modal-body">
+
+                                {% if form.errors %}
+                                    <p class="error">Sorry, that's not a valid username or password</p>
+                                {% endif %}
+
+
+                                <form action = "{% url "login" %}" class="form-signin" role="form" method="post">
+                                    <input type="text" class="form-control" placeholder="Username" name="username"required>
+                                    <input type="password" class="form-control" placeholder="Password" name="password"required>
+                                    <label class="checkbox">
+                                        <input type="checkbox" value="remember-me"> Remember me
+                                    </label>
+
+
+
+                            </div>
+                            <div class="modal-footer">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Sign in!</button>
+                                </form>
+
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+
+
+                <div class="modal fade" id="registerModal" tabindex="-1" role="form" aria-labelledby="registerModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="registerModalLabel">Sign up!</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{% url "register" %}" class="form-signin" method="post" accept-charset="utf-8" name = "register">
+
+                                    <input class="form-control" type="text" placeholder="cellphone number" name="username" required>
+
+                                    <input class="form-control" type="password" placeholder="pin" name="password1" required>
+                                    <input class="form-control" type="password" placeholder="pin" name="password2" required>
+
+                                    <input class="form-control" type="text" placeholder="First Name" name="fn" required>
+                                    <input class="form-control" type="text" placeholder="Last Name" name="ln" required>
+                                    <input class="form-control" type="email" placeholder="Email" name="email">
+                            </div>
+                            <div class="modal-footer">
+                                {% csrf_token %}
+                                <p id="demo"></p>
+
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary" onclick="phonenumber('blah')">Join!</button>
+                                </form>
+
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+
+
+
+
+            </div>
+
+            <div class="col-lg-2 well col-md-pull-1">
+
+
+
+                <ul class="nav nav-list">
+                    <li>
+                        <button class="btn btn-primary btn-lg btn-block"  data-toggle="modal" data-target="#registerModal">
+                            Sign up!
+                        </button>
+                    </li>
+                    <br>
+                    <li class="nav-divider"></li>
+                    <li class="divider"></li>
+                    <li class="divider"></li>
+
+                    <br>
+                    <li>
+                        <button class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#loginModal">
+                            Log in!
+                        </button>
+                    </li>
+                </ul>
+
+            </div>
+
+        </div>
+    {% endif %}
+
+{% endblock %}

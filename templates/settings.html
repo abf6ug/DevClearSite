@@ -1,0 +1,154 @@
+{%  extends "home.html" %}
+
+{% block content %}
+
+
+
+
+    <div class="col-lg-8 well well-sm">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">Personal Info</div>
+
+                <!-- Table -->
+                <table class="table">
+                    <tr>
+                        <td>Name</td>
+                        <td>{{ user.get_full_name }}</td>
+                        <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#nameModal"><span class ="glyphicon glyphicon-pencil"></span></button></td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td>{{ user.email }}</td>
+                        <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#emailModal"><span class ="glyphicon glyphicon-pencil"></span></button></td>
+                    </tr>
+                    <tr>
+                        <td>Password</td>
+                        <td>********</td>
+                        <td><button type="button" class="btn btn-success" data-toggle="modal" data-target="#passwordModal"><span class ="glyphicon glyphicon-pencil"></span></button></td>
+                    </tr>
+
+                </table>
+
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">Profile Info</div>
+
+                <!-- Table -->
+                <table class="table">
+                    <tr>
+                        <td>Last Login</td>
+                        <td></td>
+                        <td>{{ user.last_login}}</td>
+                    </tr>
+                    <tr>
+                        <td>Date Joined</td>
+                        <td></td>
+                        <td>{{ user.date_joined }}</td>
+                    </tr>
+
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal" id="nameModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Edit Name</h4>
+                </div>
+                <div class="modal-body">
+                    <form action = "" class="form-signin" role="form" method="post">
+                        <div class="input-group">
+                            <span class="input-group-addon">First Name</span>
+                            <input type="text" class="form-control" placeholder="First Name" name="fn" required>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon">Last Name</span>
+                            <input type="test" class="form-control" placeholder="Last Name" name="ln" required>
+                        </div>
+                </div>
+
+                <div class="modal-footer">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal" id="passwordModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Change Password</h4>
+                </div>
+                <div class="modal-body">
+                    <form action = "" class="form-signin" role="form" method="post">
+                        <div class="input-group">
+                            <span class="input-group-addon" style="width:150px;">Old Password</span>
+                            <input type="password" class="form-control" name="oldPass" required>
+                        </div>
+                        <br>
+                        <div class="input-group">
+                            <span class="input-group-addon" style="width:150px;">New Password</span>
+                            <input type="password" class="form-control" name="newPass1" required>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon" style="width:150px;">Confirm New Password</span>
+                            <input type="password" class="form-control" name="newPass2" required>
+                        </div>
+                </div>
+
+                <div class="modal-footer">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal" id="emailModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Change Email</h4>
+                </div>
+                <div class="modal-body">
+                    <form action = "" class="form-signin" role="form" method="post">
+                        <div class="input-group">
+                            <span class="input-group-addon">New Email:</span>
+                            <input type="email" class="form-control" name="newEmail" required>
+                        </div>
+                </div>
+
+                <div class="modal-footer">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    {{ response }}
+{% endblock %}

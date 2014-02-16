@@ -1,0 +1,40 @@
+{%  extends "home.html" %}
+<!-- TO DO: rearrange tag line and short description to be at bottom and give text area-->
+
+{% block content %}
+
+    <div class="well well-sm col-lg-8">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">Organization Info!</div>
+                <table class="table">
+                    <form action="" class="form-signin" method="post" accept-charset="utf-8" name = "register">
+
+                        <tr><td>Name:</td><td><input class="form-control" type="text" placeholder="Organization Name" name="name" required></td></tr>
+                        <tr><td>Short Description:</td><td><input class="form-control" type="text" placeholder="Shown when people search for your organization" name="short"></td></tr>
+                        <tr><td>Tag line:</td><td><input class="form-control" type="text" placeholder="What's your organization's motto" name="tagline"  required></td></tr>
+                        <tr><td>Start Date:</td><td><input class="form-control" type="date" placeholder="When did this organization begin?" name="date" required></td></tr>
+                        <tr><td>Website:</td><td><input class="form-control" type="url" placeholder="What's your website?" name="website" required></td></tr>
+
+
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="panel panel-default" style="">
+                <div class="panel-heading">What is your organization?</div>
+                <table class="table">
+                    <tr><td><textarea placeholder="What do you all do?"  name="description" style="width:100%" rows="7"></textarea></td></tr>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            {% csrf_token %}
+            <button class="btn-lg btn-block btn-success" type="submit">Create!</button>
+            </form>
+        </div>
+    </div>
+
+
+
+{%  endblock %}
