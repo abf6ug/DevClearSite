@@ -51,6 +51,7 @@ INSTALLED_APPS = (
     'crispy_forms',
     'south',
     'object_permissions',
+    'widget_tweaks'
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block left_side_bar %}
+
+    <div class="col-lg-2 well well-sm" style="height: 85%">
+        <div style="padding-bottom: 10px">
+            <img class="img-circle"
+                 src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
+                    >
+        </div>
+
+        <div style="padding-bottom: 10px"><h3>{{ proj.name }}</h3></div>
+
+        <div style="padding-bottom: 10px"><h4>A project sponsored by
+            <a href="/profile/{{ proj.sponsor_org.name }}">{{ proj.sponsor_org.name }}</a></h4></div>
+
+        {% comment %}
+        <div class="list-group">
+                    {% for org in  user.organization_set.all%}
+                        <li class="list-group-item">
+                            <h4 class="list-group-item-heading"><a href="/profile/{{ org.name }}/">{{ org.name }}</a></h4>
+                            <p class="list-group-item-text">{{ org.tagline }}</p>
+                        </li>
+                    {% endfor %}
+        </div>{% endcomment %}
+        <div class="list-group">
+            <li class="list-group-item">
+                Want to be a member of {{ proj.name }}?
+            </li>
+            <li class="list-group-item">
+                <form method="post" name="add_user">
+                    <input type="hidden" name="type" value="add_user"/>
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-block">Click to join! <span
+                            class="glyphicon glyphicon-plus"></span></button>
+                </form>
+            </li>
+
+        </div>
+
+    </div>
+
+
+{% endblock %}
