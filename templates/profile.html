@@ -12,8 +12,8 @@
 
         <div style="padding-bottom: 10px"><h3>{{ org.name }}</h3></div>
 
-        <div class="personal">
-            <div class="list-group">
+        <div class="personal" style="padding-bottom: 10px">
+        <div class="list-group">
                 <li  class="list-group-item">
                     <h4 class="list-group-item-heading">Email</h4>
                     <p class="list-group-item-text"></p>
@@ -23,6 +23,20 @@
                     <p class="list-group-item-text"></p>
                 </li>
             </div>
+        </div>
+        <div class="list-group">
+            <li class="list-group-item">
+                Want to be a member of {{ org.name }}?
+            </li>
+            <li class="list-group-item">
+                <form method="post" name="add_user">
+                    <input type="hidden" name="type" value="add_user"/>
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-block">Click to join! <span
+                            class="glyphicon glyphicon-plus"></span></button>
+                </form>
+            </li>
+
         </div>
 
     </div>
@@ -109,13 +123,13 @@
                         <div class="panel-heading">Project Info</div>
                         <table class="table">
                             <tr>
-                                    <td>Motto</td>
+                                <td>Motto</td>
                                 <td>{{ proj.tagline }}</td>
                             </tr>
-                                <tr>
-                                    <td>When We Started</td>
-                                    <td>{{ proj.start_date }}</td>
-                                </tr>
+                            <tr>
+                                <td>When We Started</td>
+                                <td>{{ proj.start_date }}</td>
+                            </tr>
 
                             <tr>
                                 <td>Status</td>
@@ -190,7 +204,10 @@
                             </tr>
                         {% endif %}
 
+                    {% empty %}
+                        <tr>Sorry, there are no admins currently.</tr>
                     {% endfor %}
+
 
                 </table>
             </div>
@@ -211,48 +228,55 @@
                             <th>Drop Member</th>
 
                         {% endif %}
-                        </th>
-                        {% for member in org.members.all %}
-                            {% has_perm member 'add_member' org as check_member_admin %}
-                            {% if not check_member_admin %}
-                                <tr>
-                                    <td>{{ member.get_full_name }}</td>
-                                    {% if check_user_admin %}
+                    </tr>
+                    {% for member in org.members.all %}
+                        {% has_perm member 'add_member' org as check_member_admin %}
+                        {% if not check_member_admin %}
+                            <tr>
+                                <td>{{ member.get_full_name }}</td>
+                                {% if check_user_admin %}
 
-                                        <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
-                                                data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
-                                        <td>
-                                            <form method="post" accept-charset="utf-8" name="upgrade">
-                                                <input type="hidden" name="user" value="{{ member.username }}"/>
-                                                <input type="hidden" name="type" value="upgrade"/>
+                                    <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
+                                            data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
+                                    <td>
+                                        <form method="post" accept-charset="utf-8" name="upgrade">
+                                            <input type="hidden" name="user" value="{{ member.username }}"/>
+                                            <input type="hidden" name="type" value="upgrade"/>
 
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-succes"><span
-                                                        class="glyphicon glyphicon-thumbs-up"></span></button>
-                                            </form>
-                                        </td>
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-succes"><span
+                                                    class="glyphicon glyphicon-thumbs-up"></span></button>
+                                        </form>
+                                    </td>
 
-                                        <td>
-                                            <form method="post" accept-charset="utf-8" name="remove">
-                                                <input type="hidden" name="user" value="{{ member.username }}"/>
-                                                <input type="hidden" name="type" value="remove"/>
+                                    <td>
+                                        <form method="post" accept-charset="utf-8" name="remove">
+                                            <input type="hidden" name="user" value="{{ member.username }}"/>
+                                            <input type="hidden" name="type" value="remove"/>
 
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-danger"><span
-                                                        class="glyphicon glyphicon-remove"></span></button>
-                                            </form>
-                                        </td>
-                                    {% endif %}
-                                </tr>
-                            {% endif %}
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger"><span
+                                                    class="glyphicon glyphicon-remove"></span></button>
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
 
-                        {% endfor %}
+                        {% empty %}<!-- Doesn't work because members isn't actually empty, we just filter results.  Look at generating admin and regular member list in view-->
+                        <tr>Sorry, there are no regular members yet.</tr>
+                    {% endfor %}
                 </table>
             </div>
         </div>
     </div>
     <div class="tab-pane fade" id="pref">
-        Admin Preferences
+        <form method="post" name="remove_org">
+            <input type="hidden" name="type" value="remove_org"/>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-block">Remove {{ org.name }}</button>
+        </form>
+
     </div>
     </div>
     </div>
@@ -262,8 +286,8 @@
          aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-            <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title" id="myModalLabel">Remove user from organization?</h4>
                 </div>
                 <div class="modal-body">

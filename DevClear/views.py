@@ -45,7 +45,9 @@ def register(request):
 
 @login_required
 def home(request):
-    return render_to_response('home.html', {}, context_instance=RequestContext(request))
+    return render_to_response('home.html', {'all_org': Organization.objects.all()},
+                              context_instance=RequestContext(request))
+
 
 @login_required
 def settings(request):
@@ -129,10 +131,22 @@ def register_org(request):
 
     return render_to_response('register_org.html', {}, context_instance=RequestContext(request))
 
+
+@login_required
 def view_profile(request, org_name=""):
     org = Organization.objects.get(name=org_name)
 
-    if request.method == 'POST' and request.POST.get("type") is "remove":
+
+    #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), ['view', 'edit', 'remove', 'add_project', 'add_member'], org)
+    #Organization.objects.get
+
+    if request.method == 'POST' and request.POST.get("type") == "add_user":
+        org.members.add(request.user)
+        perm.grant(request.user, 'view', org)
+        profile_url = '/profile/' + org.name + '/'
+        return HttpResponseRedirect(profile_url)
+
+    if request.method == 'POST' and request.POST.get("type") == "remove":
         user = User.objects.get(username=request.POST.get("user"))
         org.members.remove(user)
         perm.revoke_all(user, org)
@@ -151,6 +165,10 @@ def view_profile(request, org_name=""):
         perm.set_user_perms(user, ['view'], org)
         profile_url = '/profile/' + org.name + '/'
         return HttpResponseRedirect(profile_url)
+
+    elif request.method == 'POST' and request.POST.get("type") == "remove_org":
+        org.delete()
+        return HttpResponseRedirect('/home/')
 
     return render_to_response('profile.html', {'org': org}, context_instance=RequestContext(request))
 

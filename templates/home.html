@@ -34,20 +34,62 @@
                         </li>
                     {% endfor %}
                 </div>
-                <a href={% url "register_org" %} class="btn btn-danger" type="button"
-                data-toggle="tooltip"
-                data-original-title="Edit this user">Register Organization</a>
+                <a href="{% url "register_org" %}" class="btn btn-danger" type="button"
+                   data-toggle="tooltip"
+                   data-original-title="Edit this user">Register Organization</a>
             </div>
         </div>
 
     {% endblock %}
 
     {% block content %}
-        <div class="col-lg-8">
+        <div class="col-lg-8" style="max-height: 85%;overflow: auto">
 
-            Organization and project feed
+            {% for org in all_org %}
+                <div class="col-lg-12 well well-sm container">
+
+                    <div class="col-lg-2" style="text-align: center">
+                        <div>
+                            <h4><a href='/profile/{{ org.name }}/'>{{ org.name }}</a></h4>
+                        </div>
+                        <div>
+                            <img src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=100">
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+
+                        <div class="panel panel-default">
+                            <!-- Default panel contents -->
+                            <div class="panel-heading">Organization Info</div>
+                            <table class="table">
+                                <tr>
+                                    <td>Motto</td>
+                                    <td>{{ org.tagline }}</td>
+                                </tr>
+                                <tr>
+                                    <td>When We Started</td>
+                                    <td>{{ org.start_date }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Organization website</td>
+                                    <td>{{ org.website }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="panel panel-default">
+
+                            <div class="panel-heading">
+                                Description
+                            </div>
+                            {{ org.short_description }}
+                        </div>
+                    </div>
+                </div>
+
+            {% endfor %}
         </div>
-
     {% endblock %}
 
 
@@ -56,10 +98,11 @@
         <div class="col-lg-2">
             <h3> Your Projects </h3>
             <div class="project">
-              <div class="list-group">
+                <div class="list-group">
                     {% for proj in  user.project_set.all%}
                         <li class="list-group-item">
-                            <h4 class="list-group-item-heading">{{ proj.name }}</a></h4>
+                            <h4 class="list-group-item-heading">{{ proj.name }}</h4>
+
                             <p class="list-group-item-text">{{ proj.sponsor_org.name }}</p>
                         </li>
                     {% endfor %}
