@@ -132,11 +132,25 @@ def register_org(request):
 def view_profile(request, org_name=""):
     org = Organization.objects.get(name=org_name)
 
-    if request.method == 'POST' and request.get.POST("username"):
-        username = request.get.POST("username")
-        Organization.members.remove(username)
-        perm.revoke_all(username, org)
+    if request.method == 'POST' and request.POST.get("type") is "remove":
+        user = User.objects.get(username=request.POST.get("user"))
+        org.members.remove(user)
+        perm.revoke_all(user, org)
+        profile_url = '/profile/' + org.name + '/'
+        return HttpResponseRedirect(profile_url)
 
+
+    elif request.method == 'POST' and request.POST.get("type") == "upgrade":
+        user = User.objects.get(username=request.POST.get("user"))
+        perm.set_user_perms(user, ['view', 'edit', 'remove', 'add_project', 'add_member'], org)
+        profile_url = '/profile/' + org.name + '/'
+        return HttpResponseRedirect(profile_url)
+
+    elif request.method == 'POST' and request.POST.get("type") == "downgrade":
+        user = User.objects.get(username=request.POST.get("user"))
+        perm.set_user_perms(user, ['view'], org)
+        profile_url = '/profile/' + org.name + '/'
+        return HttpResponseRedirect(profile_url)
 
     return render_to_response('profile.html', {'org': org}, context_instance=RequestContext(request))
 
