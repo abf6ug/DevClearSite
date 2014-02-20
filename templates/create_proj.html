@@ -6,22 +6,8 @@
         <div class="col-lg-6">
             <div class="panel panel-default">
                 <div class="panel-heading">Project Info!</div>
-                {% comment %}
-                <form action="" class="form-signin" method="post" accept-charset="utf-8" name = "register">
-                    <table>
-                        <tr><td>Name</td><td><input class="form-control" type="text" placeholder="Project" name="name" required></td></tr>
-                        <tr><td>Sponsor Organization</td><td><select name="sponsor"></select></td></tr>
-                        <tr><td>Scale</td><td><input class="form-control" type="text" placeholder="Where is this project located" name="scale"required></td></tr>
-                        <tr><td>Status</td><td><select></select></td></tr>
-                        <tr><td>Tag line</td><td><input class="form-control" type="text" placeholder="What's your organization's motto" name="tagline"  required></td></tr>
-                        <tr><td>Start Date</td><td><input class="form-control" type="date" placeholder="When did this project begin?" name="sdate" required></td></tr>
-                        <tr><td>End Date</td><td><input class="form-control" type="date" placeholder="When is it's projected finish?" name="edate" required></td></tr>
 
-                        <tr><td>Website</td><td><input class="form-control" type="url" placeholder="What's your website?" name="website"required></td></tr>
-                        <tr><td>Short Description</td><td><input class="form-control" type="text" placeholder="Abbreviated Description" name="short"required></td></tr>
-
-                    </table>{% endcomment %}
-
+                <!--Change how errors are alerted and restrict sponsor orgs to those that user has low or high admin priveleges too-->
                 <form method="post">{% csrf_token %}
                     <table class="table">
                         {% for field in form %}
@@ -29,27 +15,22 @@
                                 {% ifnotequal field.label "Start date" %}
                                     {% ifnotequal field.label "End date" %}
                                         {% ifnotequal field.label "Short description" %}
-
-
                                             <div class="fieldWrapper">
                                                 <tr>
                                                     <td><b>{{ field.label }}</b></td>
                                                     <td> {% render_field field class+="input-sm" style+="width: 100%" %}</td>
-                                                    <td>{{ field.errors }}
-                                                    </td>
+                                                    {% if field.errors %}
+                                                        <td>{{ field.errors }}
+                                                        </td>
+                                                    {% endif %}
                                                 </tr>
                                             </div>
                                         {% endifnotequal %}
                                     {% endifnotequal %}
                                 {% endifnotequal %}
-
                             {% endifnotequal %}
-
-
                         {% endfor %}
-
                     </table>
-
             </div>
 
             <div class="panel panel-default" style="">
@@ -60,8 +41,10 @@
                             <td><b>{{ form.start_date.label }}</b></td>
                             <td>
                                 {% render_field form.start_date class+="input-sm" type="date" style+="width: 100%" %}</td>
-                            <td>{{ form.start_date.errors }}
-                            </td>
+                            {% if form.start_date.errors %}
+                                <td>{{ form.start_date.errors }}
+                                </td>
+                            {% endif %}
                         </tr>
                     </div>
                     <div class="fieldWrapper">
@@ -69,8 +52,10 @@
                             <td><b>{{ form.end_date.label }}</b></td>
                             <td>
                                 {% render_field form.end_date class+="input-sm" type="date" style+="width: 100%" %}</td>
-                            <td>{{ form.end_date.errors }}
-                            </td>
+                            {% if form.end_date.errors %}
+                                <td>{{ form.end_date.errors }}
+                                </td>
+                            {% endif %}
                         </tr>
                 </table>
             </div>
@@ -79,32 +64,37 @@
         </div>
         <div class="col-lg-6">
 
-            <div class="panel panel-default" style="">
+            <div class="panel panel-default">
                 <div class="panel-heading">Abbreviated Project Description?</div>
                 <table class="table">
                     <tr>
                         <td>
-                            {% render_field form.short_description class+="input" style+="width: 100%" rows="3" %}
-                        </td>
-                        <td>{{ field.errors }}
+                            {% render_field form.short_description class+="input-sm" style+="width: 100%" rows="5" placeholder="Please provide an abbreviated description of your organization in 300 characters or less"%}
                         </td>
                     </tr>
-
+                    {% if form.short_description.errors %}
+                        <tr>
+                            {{ form.short_description.errors }}
+                        </tr>
+                    {% endif %}
 
                 </table>
             </div>
 
-
-            <div class="panel panel-default" style="">
+            <div class="panel panel-default">
                 <div class="panel-heading">What is your project? In detail...</div>
                 <table class="table">
                     <tr>
                         <td>
-                            {% render_field form.description class+="input" style+="width: 100%" rows="7" %}
-                        </td>
-                        <td>{{ field.errors }}
+                            {% render_field form.description class+="input-sm" style+="width: 100%" rows="10" placeholder="Please explain what your organization does in 2000 characters or less"%}
                         </td>
                     </tr>
+                    {% if form.description.errors%}
+                        <tr>
+                            <td>{{ form.description.errors }}
+                            </td>
+                        </tr>
+                    {% endif %}
 
 
                 </table>

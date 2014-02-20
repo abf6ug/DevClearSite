@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load organization_tags %}
+{%  load widget_tweaks %}
 
 
 {% block left_side_bar %}
@@ -25,20 +26,23 @@
                 </li>
             </div>
         </div>
-        <div class="list-group">
-            <li class="list-group-item">
-                Want to be a member of {{ org.name }}?
-            </li>
-            <li class="list-group-item">
-                <form method="post" name="add_user">
-                    <input type="hidden" name="type" value="add_user"/>
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success btn-block">Click to join! <span
-                            class="glyphicon glyphicon-plus"></span></button>
-                </form>
-            </li>
+        {% has_perm user 'view' org as check%}
+        {% if not check %}
+            <div class="list-group">
+                <li class="list-group-item">
+                    Want to be a member of {{ org.name }}?
+                </li>
+                <li class="list-group-item">
+                    <form method="post" name="add_user">
+                        <input type="hidden" name="type" value="add_user"/>
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-block">Click to join! <span
+                                class="glyphicon glyphicon-plus"></span></button>
+                    </form>
+                </li>
+            </div>
+        {% endif %}
 
-        </div>
 
     </div>
 
@@ -282,26 +286,23 @@
                 <table class="table table-responsive">
                     <form method="post" name="change_pref">
                         <input type="hidden" name="type" value="change_pref"/>
-                        <tr>
-                            <td>Name</td>
+                        <table class="table"> {% for field in form %}
+                            {% ifnotequal field.label "Description" %}
+                                {% ifnotequal field.label "Short description" %}
+                                    <div class="fieldWrapper">
+                                        <tr>
+                                            <td><b>{{ field.label }}</b></td>
+                                            <td> {% render_field field class+="input-sm" style+="width: 100%" %}</td>
+                                            {% if field.errors %}
+                                                <td>{{ field.errors }}
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    </div>
 
-                            <td><input style="width: 100%" type="text" name="name" value="{{ org.name }}"></td>
-                        </tr>
-                        <tr>
-                            <td>Motto</td>
-                            <td><input class="input-sm" style="width: 100%" type="text" name="tagline"
-                                       value="{{ org.tagline }}"></td>
-                        </tr>
-                        <tr>
-                            <td>Start Date</td>
-                            <td><input class="input-sm" style="width: 100%" type="date" name="start_date"
-                                       value="{{ org.start_date }}"></td>
-                        </tr>
-                        <tr>
-                            <td>Website</td>
-                            <td><input class="input-sm" style="width: 100%" type="url" name="website"
-                                       value="{{ org.website }}"></td>
-                        </tr>
+                                {% endifnotequal %}
+                            {% endifnotequal %}
+                        {% endfor %}</table>
                         {% csrf_token %}
                         <tr>
                             <td></td>
