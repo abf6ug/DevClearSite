@@ -13,9 +13,10 @@
         <div style="padding-bottom: 10px"><h3>{{ org.name }}</h3></div>
 
         <div class="personal" style="padding-bottom: 10px">
-        <div class="list-group">
-                <li  class="list-group-item">
+            <div class="list-group">
+                <li class="list-group-item">
                     <h4 class="list-group-item-heading">Email</h4>
+
                     <p class="list-group-item-text"></p>
                 </li>
                 <li class="list-group-item">
@@ -110,7 +111,7 @@
 
                 <div class="col-lg-2" style="text-align: center">
                     <div>
-                        <h4>{{ proj.name }}</h4>
+                        <h4><a href="/profile/{{ org.name }}/{{ proj.name }}/">{{ proj.name }}</a></h4>
                     </div>
                     <div>
                         <img src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=135">
@@ -271,11 +272,67 @@
         </div>
     </div>
     <div class="tab-pane fade" id="pref">
-        <form method="post" name="remove_org">
-            <input type="hidden" name="type" value="remove_org"/>
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger btn-block">Remove {{ org.name }}</button>
-        </form>
+
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">Organization Info</div>
+                <!-- Table -->
+                <table class="table table-responsive">
+                    <form method="post" name="change_pref">
+                        <input type="hidden" name="type" value="change_pref"/>
+                        <tr>
+                            <td>Name</td>
+
+                            <td><input style="width: 100%" type="text" name="name" value="{{ org.name }}"></td>
+                        </tr>
+                        <tr>
+                            <td>Motto</td>
+                            <td><input class="input-sm" style="width: 100%" type="text" name="tagline"
+                                       value="{{ org.tagline }}"></td>
+                        </tr>
+                        <tr>
+                            <td>Start Date</td>
+                            <td><input class="input-sm" style="width: 100%" type="date" name="start_date"
+                                       value="{{ org.start_date }}"></td>
+                        </tr>
+                        <tr>
+                            <td>Website</td>
+                            <td><input class="input-sm" style="width: 100%" type="url" name="website"
+                                       value="{{ org.website }}"></td>
+                        </tr>
+                        {% csrf_token %}
+                        <tr>
+                            <td></td>
+                            <td>
+                                <button type="submit" class="btn">Save changes!</button>
+                            </td>
+                        </tr>
+                    </form>
+
+                </table>
+
+                <form method="post" name="remove_org">
+                    <input type="hidden" name="type" value="remove_org"/>
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Remove {{ org.name }}</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <table>
+
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+
 
     </div>
     </div>
@@ -287,7 +344,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title" id="myModalLabel">Remove user from organization?</h4>
                 </div>
                 <div class="modal-body">

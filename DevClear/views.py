@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
-from DevClear.models import Organization,Project
+from DevClear.models import Organization, Project, ProjectForm
 import object_permissions as perm
 
 def main(request):
@@ -85,28 +85,36 @@ def inbox(request):
 @login_required
 def createProject(request):
     if request.method == 'POST':
-        name= request.POST.get('name')
-        short= request.POST.get('short')
-        tagline= request.POST.get('tagline')
-        start_date= request.POST.get('sdate')
-        end_date= request.POST.get('edate')
-        description= request.POST.get('description')
-        website= request.POST.get('website')
-        scale= request.POST.get('scale')
-        status= request.POST.get('status')
 
-        org= request.user.organization_set.get(id=1)
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            sponsor_org = form.cleaned_data['sponsor_org']
+            scale = form.cleaned_data['scale']
+            status = form.cleaned_data['status']
+            tagline = form.cleaned_data['tagline']
+            short = form.cleaned_data['short_description']
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+            description = form.cleaned_data['description']
+            website = form.cleaned_data['website']
 
-        project = Project.create(name, org, short, tagline,
-                                 start_date, end_date, description, website, scale, 'NS')
-        project.save()
-        project.members.add(request.user)
+            project = Project.create(name, sponsor_org, short, tagline,
+                                     start_date, end_date, description, website, scale, status)
+            project.save()
+            project.members.add(request.user)
+            perm.set_user_perms(request.user, ['view', 'edit', 'remove', 'add_project', 'add_member']
+                                , sponsor_org)
 
-        return HttpResponseRedirect('/home/')#go to profile page normally
+            profile_url = "/profile/" + sponsor_org.name + '/' + name
+            return HttpResponseRedirect(profile_url)  # Redirect after POST
+    else:
+        form = ProjectForm()  # An unbound form
 
+    return render_to_response('create_proj.html', {
+        'form': form,
+    }, context_instance=RequestContext(request))
 
-
-    return render_to_response('create_proj.html', {}, context_instance=RequestContext(request))
 
 @login_required
 def register_org(request):
@@ -135,6 +143,7 @@ def register_org(request):
 @login_required
 def view_profile(request, org_name=""):
     org = Organization.objects.get(name=org_name)
+    response = ''
 
 
     #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), ['view', 'edit', 'remove', 'add_project', 'add_member'], org)
@@ -170,6 +179,38 @@ def view_profile(request, org_name=""):
         org.delete()
         return HttpResponseRedirect('/home/')
 
-    return render_to_response('profile.html', {'org': org}, context_instance=RequestContext(request))
+    elif request.method == 'POST' and request.POST.get("type") == "change_pref":
+        new_name = request.POST.get('name')
+        new_tagline = request.POST.get('tagline')
+        new_start_date = request.POST.get('start_date')
+        new_website = request.POST.get('website')
+        if not org.name == new_name:
+            if not Organization.objects.filter(name=new_name).count():
+                org.name = new_name
+                response += "Your organization's name has been changed to " + new_name + "\n"
+            else:
+                response += "There is already an organization with this name! Sorry!" + "\n"
+        if not org.tagline == new_tagline:
+            org.tagline = new_tagline
+            response += "Your organization's motto has been changed to " + new_tagline + "\n"
+
+        if not new_start_date == '':
+            org.start_date = new_start_date
+            response += "Your organization's start date has been changed to " + new_start_date + "\n"
+        if not org.website == new_website:
+            org.website = new_website
+            response += "Your organization's website has been changed to " + new_website + "\n"
+
+        org.save()
+        profile_url = '/profile/' + org.name + '/'
+        return HttpResponseRedirect(profile_url)
+
+    return render_to_response('profile.html', {'org': org, 'response': response},
+                              context_instance=RequestContext(request))
 
 
+def view_project_profile(request, org_name="", proj_name=""):
+    org = Organization.objects.get(name=org_name)
+    proj = Project.objects.get(name=proj_name, sponsor_org=org)
+
+    return render_to_response('project_profile.html', {'proj': proj}, context_instance=RequestContext(request))

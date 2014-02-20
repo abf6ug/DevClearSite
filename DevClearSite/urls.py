@@ -21,9 +21,11 @@ urlpatterns = patterns('',
                        url(r'^home/inbox/$', 'DevClear.views.inbox', name='inbox'),
                        url(r'^home/createProject/$', 'DevClear.views.createProject', name='inbox'),
                        url(r'^home/register_org/$', 'DevClear.views.register_org', name='register_org'),
+                       url(r'^profile/(?P<org_name>[\w|\W]+)/(?P<proj_name>[\w|\W]+)/$',
+                           'DevClear.views.view_project_profile', name='view_project_profile'),
+
                        url(r'^profile/(?P<org_name>[\w|\W]+)/$', 'DevClear.views.view_profile', name='view_profile'),
 
 
-
-                       )
+)
 

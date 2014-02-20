@@ -10,11 +10,11 @@ class Organization(models.Model):
     members = models.ManyToManyField(User)
     projects = models.ManyToManyField('Project', blank=True)
 
-    short_description = models.CharField(max_length=300, blank=True)
     tagline = models.CharField(max_length=100, blank=True)
 
     start_date = models.DateField()
 
+    short_description = models.TextField(max_length=300)
     description = models.TextField(max_length=2000)
 
     website = models.URLField(blank=True)
@@ -79,9 +79,9 @@ class Project(models.Model):
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'sponsor_org', 'scale', 'status', 'tagline', 'short_description',
-                  'start_date', 'end_date', 'description', 'website']
+        fields = ['name', 'sponsor_org', 'status', 'scale', 'website', 'tagline', 'short_description',
+                  'start_date', 'end_date', 'description']
 
-    #foreign key community
+        #foreign key community
 
 # Create your models here.

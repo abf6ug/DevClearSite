@@ -101,9 +101,13 @@
                 <div class="list-group">
                     {% for proj in  user.project_set.all%}
                         <li class="list-group-item">
-                            <h4 class="list-group-item-heading">{{ proj.name }}</h4>
+                            <h4 class="list-group-item-heading">
+                                <a href="/profile/{{ proj.sponsor_org.name }}/{{ proj.name }}">
+                                {{ proj.name }}</a></h4>
 
-                            <p class="list-group-item-text">{{ proj.sponsor_org.name }}</p>
+                            <p class="list-group-item-text">
+                                <a href="/profile/{{ proj.sponsor_org.name }}/">
+                                {{ proj.sponsor_org.name }}</a></p>
                         </li>
                     {% endfor %}
                 </div>
