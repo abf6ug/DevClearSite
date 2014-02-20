@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
-from DevClear.models import Organization, Project, ProjectForm
+from DevClear.models import Organization, Project, ProjectForm, OrganizationForm
 import object_permissions as perm
 
 def main(request):
@@ -155,7 +155,7 @@ def view_profile(request, org_name=""):
         profile_url = '/profile/' + org.name + '/'
         return HttpResponseRedirect(profile_url)
 
-    if request.method == 'POST' and request.POST.get("type") == "remove":
+    elif request.method == 'POST' and request.POST.get("type") == "remove":
         user = User.objects.get(username=request.POST.get("user"))
         org.members.remove(user)
         perm.revoke_all(user, org)
@@ -205,12 +205,22 @@ def view_profile(request, org_name=""):
         profile_url = '/profile/' + org.name + '/'
         return HttpResponseRedirect(profile_url)
 
-    return render_to_response('profile.html', {'org': org, 'response': response},
+    else:
+        form = OrganizationForm()
+
+    return render_to_response('profile.html', {'org': org, 'form':form, 'response': response},
                               context_instance=RequestContext(request))
 
 
 def view_project_profile(request, org_name="", proj_name=""):
     org = Organization.objects.get(name=org_name)
     proj = Project.objects.get(name=proj_name, sponsor_org=org)
+
+    if request.method == 'POST' and request.POST.get("type") == "add_user":
+        if 'view' in perm.get_user_perms(request.user, org):#change to join project
+            proj.members.add(request.user)
+            perm.grant(request.user, 'view', org)
+            profile_url = '/profile/' + org.name + '/' + proj.name
+            return HttpResponseRedirect(profile_url)
 
     return render_to_response('project_profile.html', {'proj': proj}, context_instance=RequestContext(request))

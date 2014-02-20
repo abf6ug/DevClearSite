@@ -86,7 +86,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'devclearproto',
         'USER': 'postgres',
-        'PASSWORD': 'HP8bv!tW',
+        'PASSWORD': 'postgres',
         'HOST': '',
     }
 }

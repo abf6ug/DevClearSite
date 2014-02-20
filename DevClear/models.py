@@ -52,11 +52,11 @@ class Project(models.Model):
                                       choices=STATUS_CHOICES,
                                       default='N')
     tagline = models.CharField(max_length=100)
-    short_description = models.CharField(max_length=300)
     start_date = models.DateField()
     end_date= models.DateField()
 
     description = models.TextField(max_length=2000)
+    short_description = models.TextField(max_length=300)
 
     website = models.URLField()
 
@@ -82,6 +82,13 @@ class ProjectForm(ModelForm):
         fields = ['name', 'sponsor_org', 'status', 'scale', 'website', 'tagline', 'short_description',
                   'start_date', 'end_date', 'description']
 
+
+
+class OrganizationForm(ModelForm):
+    class Meta:
+        model = Project
+        fields = ['name', 'website', 'tagline', 'short_description',
+                  'start_date', 'description']
         #foreign key community
 
 # Create your models here.
