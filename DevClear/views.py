@@ -8,7 +8,8 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
-from DevClear.models import Organization, Project, ProjectForm, OrganizationForm
+from django.forms.models import model_to_dict
+from DevClear.models import Organization, Project, ProjectForm, OrganizationForm, OrganizationModForm, ProjectModForm
 import object_permissions as perm
 
 def main(request):
@@ -42,12 +43,10 @@ def register(request):
 
     return render_to_response('register.html', {'response':response}, context_instance=RequestContext(request))
 
-
 @login_required
 def home(request):
     return render_to_response('home.html', {'all_org': Organization.objects.all()},
                               context_instance=RequestContext(request))
-
 
 @login_required
 def settings(request):
@@ -103,8 +102,7 @@ def createProject(request):
                                      start_date, end_date, description, website, scale, status)
             project.save()
             project.members.add(request.user)
-            perm.set_user_perms(request.user, ['view', 'edit', 'remove', 'add_project', 'add_member']
-                                , sponsor_org)
+            perm.set_user_perms(request.user, ['view', 'edit', 'remove', 'add_member'], project)
 
             profile_url = "/profile/" + sponsor_org.name + '/' + name
             return HttpResponseRedirect(profile_url)  # Redirect after POST
@@ -113,8 +111,7 @@ def createProject(request):
 
     return render_to_response('create_proj.html', {
         'form': form,
-    }, context_instance=RequestContext(request))
-
+        }, context_instance=RequestContext(request))
 
 @login_required
 def register_org(request):
@@ -138,7 +135,6 @@ def register_org(request):
             return HttpResponseRedirect(profile_url)#go to profile page normally
 
     return render_to_response('register_org.html', {}, context_instance=RequestContext(request))
-
 
 @login_required
 def view_profile(request, org_name=""):
@@ -180,38 +176,42 @@ def view_profile(request, org_name=""):
         return HttpResponseRedirect('/home/')
 
     elif request.method == 'POST' and request.POST.get("type") == "change_pref":
-        new_name = request.POST.get('name')
-        new_tagline = request.POST.get('tagline')
-        new_start_date = request.POST.get('start_date')
-        new_website = request.POST.get('website')
-        if not org.name == new_name:
-            if not Organization.objects.filter(name=new_name).count():
-                org.name = new_name
-                response += "Your organization's name has been changed to " + new_name + "\n"
-            else:
-                response += "There is already an organization with this name! Sorry!" + "\n"
-        if not org.tagline == new_tagline:
-            org.tagline = new_tagline
-            response += "Your organization's motto has been changed to " + new_tagline + "\n"
+        mod_form = OrganizationModForm(request.POST)
 
-        if not new_start_date == '':
-            org.start_date = new_start_date
-            response += "Your organization's start date has been changed to " + new_start_date + "\n"
-        if not org.website == new_website:
-            org.website = new_website
-            response += "Your organization's website has been changed to " + new_website + "\n"
+        if mod_form.is_valid():
+            new_name = mod_form.cleaned_data['name']
+            new_tagline = mod_form.cleaned_data['tagline']
+            new_website = mod_form.cleaned_data['website']
+            new_start_date = mod_form.cleaned_data['start_date']
+            new_short = mod_form.cleaned_data['short_description']
+            new_description = mod_form.cleaned_data['description']
 
-        org.save()
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
+            if not new_name == org.name:
+                if not Organization.objects.filter(name=new_name).count():
+                    org.name = new_name
+            if not new_tagline == org.tagline:
+                org.tagline = new_tagline
+            if not new_start_date == org.start_date :
+                org.start_date = new_start_date
+            if not new_website == org.website:
+                org.website = new_website
+            if not new_short == org.short_description:
+                org.short_description = new_short
+            if not new_description == org.description:
+                org.description = new_description
+
+            org.save()
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
 
     else:
-        form = OrganizationForm()
+        fields_dict = model_to_dict(org)
+        mod_form = OrganizationModForm(fields_dict, instance=org)
 
-    return render_to_response('profile.html', {'org': org, 'form':form, 'response': response},
+    return render_to_response('profile.html', {'org': org, 'mod_form': mod_form, 'response': response},
                               context_instance=RequestContext(request))
 
-
+@login_required
 def view_project_profile(request, org_name="", proj_name=""):
     org = Organization.objects.get(name=org_name)
     proj = Project.objects.get(name=proj_name, sponsor_org=org)
@@ -219,8 +219,75 @@ def view_project_profile(request, org_name="", proj_name=""):
     if request.method == 'POST' and request.POST.get("type") == "add_user":
         if 'view' in perm.get_user_perms(request.user, org):#change to join project
             proj.members.add(request.user)
-            perm.grant(request.user, 'view', org)
+            perm.grant(request.user, 'view', proj)
             profile_url = '/profile/' + org.name + '/' + proj.name
             return HttpResponseRedirect(profile_url)
 
-    return render_to_response('project_profile.html', {'proj': proj}, context_instance=RequestContext(request))
+    elif request.method == 'POST' and request.POST.get("type") == "remove":
+        user = User.objects.get(username=request.POST.get("user"))
+        proj.members.remove(user)
+        perm.revoke_all(user, proj)
+        profile_url = '/profile/' + org.name + '/' + proj.name
+        return HttpResponseRedirect(profile_url)
+
+    elif request.method == 'POST' and request.POST.get("type") == "upgrade":
+        user = User.objects.get(username=request.POST.get("user"))
+        perm.set_user_perms(user, ['view', 'edit', 'remove', 'add_member'], proj)
+        profile_url = '/profile/' + org.name + '/' + proj.name
+        return HttpResponseRedirect(profile_url)
+
+    elif request.method == 'POST' and request.POST.get("type") == "downgrade":
+        user = User.objects.get(username=request.POST.get("user"))
+        perm.set_user_perms(user, ['view'], proj)
+        profile_url = '/profile/' + org.name + '/' + proj.name
+        return HttpResponseRedirect(profile_url)
+
+    elif request.method == 'POST' and request.POST.get("type") == "remove_org":
+        proj.delete()
+        return HttpResponseRedirect('/home/')
+
+    elif request.method == 'POST' and request.POST.get("type") == "change_pref":
+        mod_form = ProjectModForm(request.POST)
+
+        if mod_form.is_valid():
+            new_name = mod_form.cleaned_data['name']
+            new_tagline = mod_form.cleaned_data['tagline']
+            new_website = mod_form.cleaned_data['website']
+            new_status = mod_form.cleaned_data['status']
+            new_scale = mod_form.cleaned_data['scale']
+
+            new_start_date = mod_form.cleaned_data['start_date']
+            new_end_date = mod_form.cleaned_data['end_date']
+
+            new_short = mod_form.cleaned_data['short_description']
+            new_description = mod_form.cleaned_data['description']
+
+            if not new_name == proj.name:
+                if not Project.objects.filter(name=new_name).count():
+                    proj.name = new_name
+            if not new_tagline == proj.tagline:
+                proj.tagline = new_tagline
+            if not new_website == proj.website:
+                proj.website = new_website
+            if not new_status == proj.status:
+                proj.status = new_status
+            if not new_scale == proj.scale:
+                proj.scale = new_scale
+            if not new_start_date == proj.start_date:
+                proj.start_date = new_start_date
+            if not new_end_date == proj.end_date:
+                proj.end_date = new_end_date
+            if not new_short == proj.short_description:
+                proj.short_description = new_short
+            if not new_description == proj.description:
+                proj.description = new_description
+
+            proj.save()
+            profile_url = '/profile/' + org.name + '/' +proj.name
+            return HttpResponseRedirect(profile_url)
+    else:
+        #mod_form = ProjectModForm()
+        fields_dict = model_to_dict(proj)
+        mod_form = ProjectModForm(fields_dict, instance=proj)
+
+    return render_to_response('project_profile.html', {'proj': proj, 'mod_form': mod_form}, context_instance=RequestContext(request))

@@ -9,8 +9,6 @@ function phonenumber(inputtxt)
 
     if(inputtxt.match(international) || inputtxt.match(american))
     {
-        document.getElementById("demo").innerHTML=inputtxt;
-
         return true;
     }
     else

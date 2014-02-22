@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% load organization_tags %}
+{% load project_tags %}
+{% load widget_tweaks %}
 
 {% block left_side_bar %}
 
@@ -11,34 +14,371 @@
 
         <div style="padding-bottom: 10px"><h3>{{ proj.name }}</h3></div>
 
-        <div style="padding-bottom: 10px"><h4>A project sponsored by
-            <a href="/profile/{{ proj.sponsor_org.name }}">{{ proj.sponsor_org.name }}</a></h4></div>
-
-        {% comment %}
-        <div class="list-group">
-                    {% for org in  user.organization_set.all%}
-                        <li class="list-group-item">
-                            <h4 class="list-group-item-heading"><a href="/profile/{{ org.name }}/">{{ org.name }}</a></h4>
-                            <p class="list-group-item-text">{{ org.tagline }}</p>
-                        </li>
-                    {% endfor %}
-        </div>{% endcomment %}
-        <div class="list-group">
-            <li class="list-group-item">
-                Want to be a member of {{ proj.name }}?
-            </li>
-            <li class="list-group-item">
-                <form method="post" name="add_user">
-                    <input type="hidden" name="type" value="add_user"/>
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success btn-block">Click to join! <span
-                            class="glyphicon glyphicon-plus"></span></button>
-                </form>
-            </li>
+        <div class="panel" style="padding-bottom: 10px">
+            <h4>A project sponsored by
+                <a href="/profile/{{ proj.sponsor_org.name }}">{{ proj.sponsor_org.name }}</a></h4>
 
         </div>
 
+        {% has_perm user 'view' proj as check%}
+        {% if not check %}
+            <div class="list-group">
+                <li class="list-group-item">
+                    Want to be a member of {{ proj.name }}?
+                </li>
+                <li class="list-group-item">
+                    <form method="post" name="add_user" onsubmit="return confirm('Are you sure you want to join?');">
+                        <input type="hidden" name="type" value="add_user"/>
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-block">Click to join! <span
+                                class="glyphicon glyphicon-plus"></span></button>
+                    </form>
+                </li>
+
+            </div>
+        {% else %}
+            <div>
+                <h4> Welcome back {{ user.first_name }}! </h4>
+
+
+            </div>
+
+        {% endif %}
     </div>
 
 
 {% endblock %}
+
+
+{% block content %}
+    <div class="col-lg-10" style="height: 85%">
+
+    <div>
+    <!-- May have to activate javascript, look at bootstrap docs if problem-->
+    <ul id="profile" class="nav nav-pills" style="padding-bottom: 10px">
+        <li class="active"><a href="#info" data-toggle="tab">Info</a></li>
+        <li><a href="#images" data-toggle="tab">Images</a></li>
+        <li><a href="#members" data-toggle="tab">Members</a></li>
+
+        {% has_perm user 'remove' proj as check_admin %}
+        {% if check_admin %}
+            <li><a href="#pref" data-toggle="tab">Preferences</a></li>
+        {% endif %}
+
+    </ul>
+
+    <div id="profileTabContent" class="tab-content" style="max-height: 90%;overflow: auto">
+    <div class="tab-pane fade active in" id="info">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">{{ proj.name }}</div>
+
+                <!-- Table -->
+                <table class="table">
+                    <tr>
+                        <td>Motto</td>
+                        <td>{{ proj.tagline }}</td>
+                    </tr>
+                    <tr>
+                        <td>When we started</td>
+                        <td>{{ proj.start_date }}</td>
+                    </tr>
+                    <tr>
+                        <td>When we plan to finish</td>
+                        <td><p>{{ proj.end_date }}</p></td>
+                    </tr>
+                    <tr>
+                        <td>How it's going</td>
+                        <td><p>{{ proj.get_status_display }}</p></td>
+                    </tr>
+                    <tr>
+                        <td>Our Homepage</td>
+                        <td><p>{{ proj.website }}</p></td>
+                    </tr>
+
+                </table>
+
+            </div>
+        </div>
+        <div class="col-lg-6">
+
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">What is {{ proj.name }}</div>
+                <div class="panel-body">
+
+                    <p>{{ proj.description }}</p>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    <div class="tab-pane fade" id="images">
+        Images
+    </div>
+
+    <div class="tab-pane fade" id="members">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">Administrative Members</div>
+                <table class="table">
+                    <tr>
+                        <th>Member name</th>
+                        {% has_perm user 'add_member' proj as check_user_admin %}
+                        {% if check_user_admin %}
+
+                            <th>Drop Admin</th>
+                            <th>Drop Member</th>
+                        {% endif %}
+                    </tr>
+                    <!-- Remove ability not functioning-->
+                    {% for member in proj.members.all %}
+                        {% has_perm member 'add_member' proj as check_member_admin %}
+                        {% if check_member_admin %}
+                            <tr>
+                                <td>{{ member.get_full_name }}</td>
+                                {% if check_user_admin %}
+
+                                    <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
+                                            data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
+                                    <td>
+                                        <form method="post" accept-charset="utf-8" name="downgrade" onsubmit="return confirm('Are you sure you want to revoke admin privileges?');">
+                                            <input type="hidden" name="user" value="{{ member.username }}"/>
+                                            <input type="hidden" name="type" value="downgrade"/>
+
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-warning"><span
+                                                    class="glyphicon glyphicon-thumbs-down"></span></button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove this user?');">
+                                            <input type="hidden" name="user" value="{{ member.username }}"/>
+                                            <input type="hidden" name="type" value="remove"/>
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger"><span
+                                                    class="glyphicon glyphicon-remove"></span></button>
+
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
+
+                    {% empty %}
+                        <tr>Sorry, there are no admins currently.</tr>
+                    {% endfor %}
+
+
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-6">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Members</div>
+                <table class="table">
+                    <tr>
+                        <th>Member name</th>
+                        {% has_perm user 'add_member' proj as check_user_admin %}
+
+                        {% if check_user_admin %}
+
+                            <th>Give Admin</th>
+                            <th>Drop Member</th>
+
+                        {% endif %}
+                    </tr>
+                    {% for member in proj.members.all %}
+
+                        {% has_perm member 'add_member' proj as check_member_admin %}
+                        {% if not check_member_admin %}<!-- if member is regular member-->
+                            <tr>
+                                <td>{{ member.get_full_name }}</td>
+                                {% if check_user_admin %}<!--if current user is admin -->
+
+                                    <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
+                                            data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
+                                    <td>
+                                        <form method="post" accept-charset="utf-8" name="upgrade" onsubmit="return confirm('Are you sure you want to give this user admin privileges to {{ proj.name }}?');">
+                                            <input type="hidden" name="user" value="{{ member.username }}"/>
+                                            <input type="hidden" name="type" value="upgrade"/>
+
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success"><span
+                                                    class="glyphicon glyphicon-thumbs-up"></span></button>
+                                        </form>
+                                    </td>
+
+                                    <td>
+                                        <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove this user from {{ proj.name }}?');">
+                                            <input type="hidden" name="user" value="{{ member.username }}"/>
+                                            <input type="hidden" name="type" value="remove"/>
+
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger"><span
+                                                    class="glyphicon glyphicon-remove"></span></button>
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
+
+                        {% empty %}<!-- Doesn't work because members isn't actually empty, we just filter results.  Look at generating admin and regular member list in view-->
+                        <tr>Sorry, there are no regular members yet.</tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="tab-pane fade" id="pref">
+
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">Project Info</div>
+                <!-- Table -->
+                <table class="table table-responsive">
+                    <form method="post" name="change_pref" onsubmit="return confirm('Are you sure you want to save these changes?');">
+                        <input type="hidden" name="type" value="change_pref"/>
+                        <table class="table"> {% for field in mod_form %}
+                            {% ifnotequal field.label "Description" %}
+                                {% ifnotequal field.label "Short description" %}
+
+
+                                    <div class="fieldWrapper">
+                                        <tr>
+
+                                            <td><b>{{ field.label }}</b></td>
+
+                                            <td>
+                                                {% ifnotequal field.label "Start date" %}
+                                                    {% ifnotequal field.label "End date" %}
+                                                        {% render_field field class+="input-sm" style+="width: 100%" %}
+
+                                                    {% else %}
+                                                        {% render_field mod_form.start_date class+="input-sm" type="date" style+="width: 100%" %}
+
+                                                    {% endifnotequal %}
+                                                {% else %}
+                                                    {% render_field mod_form.end_date class+="input-sm" type="date" style+="width: 100%" %}
+                                                {% endifnotequal %}
+
+                                            </td>
+                                            {% if field.errors %}
+                                                <td>{{ field.errors }}
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    </div>
+                                {% endifnotequal %}
+
+                            {% endifnotequal %}
+                        {% endfor %}</table>
+                        {% csrf_token %}
+
+
+                </table>
+
+
+            </div>
+
+
+            <div class="panel panel-default">
+                <div class="panel-heading">Abbreviated Description</div>
+                <table class="table">
+                    <tr>
+                        <td>
+                            {% render_field mod_form.short_description class+="input-sm" style+="width: 100%" rows="5"%}
+                        </td>
+                    </tr>
+                    {% if mod_form.description.errors%}
+                        <tr>
+                            <td>{{ mod_form.description.errors }}
+                            </td>
+                        </tr>
+                    {% endif %}
+
+
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">What is your project? In detail...</div>
+                <table class="table">
+                    <tr>
+                        <td>
+                            {% render_field mod_form.description class+="input-sm" style+="width: 100%" rows="15" value=mod_form.description %}
+                        </td>
+                    </tr>
+                    {% if mod_form.description.errors%}
+                        <tr>
+                            <td>{{ mod_form.description.errors }}
+                            </td>
+                        </tr>
+                    {% endif %}
+
+
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel">
+                {% csrf_token %}
+                <button class="btn-lg btn-block btn-success" type="submit" >Save Changes!</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">Remove your project?</div>
+
+                <form method="post" name="remove_org" onsubmit="return confirm('Are you want to remove your project? Once deleted, you cannot recover project page');">
+                    <input type="hidden" name="type" value="remove_org"/>
+                    {% csrf_token %}
+                    <br>
+                    <div class="wrapper" style="text-align: center">
+                        <button type="submit" class="btn btn-danger" style="width: 80%">Remove {{ proj.name }}</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <div class="modal" id="{{ member.pk }}" tabindex="-1" role="form"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Remove user from organization?</h4>
+                </div>
+                <div class="modal-body">
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn  btn-danger">Remove</button>
+                    <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+{% endblock %}
+
