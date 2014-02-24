@@ -1,14 +1,38 @@
-{%  extends "home.html" %}
+{%  extends "base.html" %}
+
 {% load widget_tweaks %}
 
+{% block left_side_bar %}
+    <div class="col-lg-2 well well-sm" style="height: 85%">
+        <div style="padding-bottom: 10px">
+            <a href="profile/{{ org.name }}"><img class="img" src="{{ MEDIA_URL }}{{ org.profile_image.url }}" width="100%"></a>
+        </div>
+
+        <div style="padding-bottom: 10px"><a href="profile/{{ org.name }}"><h3>{{ org.name }}</h3></a></div>
+
+        <div class="personal" style="padding-bottom: 10px">
+            <div class="list-group">
+                <div class="list-group-item">
+                    <h4 class="list-group-item-heading">{{ org.tagline }}</h4>
+
+                    <p class="list-group-item-text"></p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}
+
 {% block content %}
-    <div class="well well-sm col-lg-8">
+    <div class="col-lg-10">
         <div class="col-lg-6">
             <div class="panel panel-default">
                 <div class="panel-heading">Project Info!</div>
 
                 <!--Change how errors are alerted and restrict sponsor orgs to those that user has low or high admin priveleges too-->
-                <form method="post">{% csrf_token %}
+                <form method="post" enctype="multipart/form-data">{% csrf_token %}
                     <table class="table">
                         {% for field in form %}
                             {% ifnotequal field.label "Description" %}
@@ -57,7 +81,9 @@
                                 </td>
                             {% endif %}
                         </tr>
+                    </div>
                 </table>
+
             </div>
 
 
