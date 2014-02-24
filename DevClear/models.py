@@ -1,11 +1,15 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.forms import ModelForm
 from object_permissions import register
+import object_permissions
+import os
 
-#add email, hq location, region, area of development, images, org landline/main phone
+#add email, hq location, region, area of development, images, org landline/main phone, profile image
 class Organization(models.Model):
     name = models.CharField(max_length=50, unique=True)
+
+    profile_image = models.ImageField(upload_to="organization/profile_image")
 
     members = models.ManyToManyField(User)
     projects = models.ManyToManyField('Project', blank=True)
@@ -28,22 +32,50 @@ class Organization(models.Model):
 
 
     @classmethod
-    def create(cls, name, short_description, tagline, start_date, description, website):
-        org = cls(name=name, short_description=short_description,
+    def create(cls, name, profile_image, short_description, tagline, start_date, description, website):
+        org = cls(name=name, profile_image=profile_image, short_description=short_description,
                    tagline=tagline, start_date=start_date, description=description, website=website)
         return org
 
-register(['view', 'edit', 'remove', 'add_project', 'add_member'], Organization, app_label='DevClear')
+class OrganizationImage(models.Model):
+
+    org = models.ForeignKey(Organization, related_name='images')
+    image = models.ImageField(upload_to='organization')
+
+    @classmethod
+    def create(cls, org, image):
+        image_instance = cls(org=org, image=image)
+        return image_instance
+
+
+register(['view_org',
+
+              'add_member', 'join_proj', 'can_post', 'can_comment',
+
+              'edit_org', 'remove_member', 'downgrade_low_admin', 'make_low_admin', 'remove_low_admin',
+              'create_proj', 'delete_proj', 'post_as_org', 'comment_as_org',  'upload_image', 'delete_image',
+              'delete_comment', 'delete_post',
+
+              'remove_org',  'downgrade_high_admin', 'make_high_admin', 'remove_high_admin'
+
+
+             ], Organization, app_label='DevClear')
+
+
+
+
+
+
 
 #add email, location, communities, region, images
 class Project(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    #    #ID?
+
+    profile_image = models.ImageField(upload_to="project/profile_image")
 
     members = models.ManyToManyField(User)
     sponsor_org = models.ForeignKey(Organization)
-    #admins = models.ForeignKey(User, related_name='admins')#need constraint to ensure in org and members
-    #possibly make many to many, look at permissions
+
 
     scale = models.CharField(max_length=20)
 
@@ -61,9 +93,9 @@ class Project(models.Model):
     website = models.URLField()
 
     @classmethod
-    def create(cls, name, sponsor_org, short_description, tagline, start_date, end_date,
+    def create(cls, name, sponsor_org, profile_image, short_description, tagline, start_date, end_date,
                description, website, scale, status):
-        org = cls(name=name, sponsor_org=sponsor_org, short_description=short_description,
+        org = cls(name=name, sponsor_org=sponsor_org, profile_image=profile_image, short_description=short_description,
                    tagline=tagline, start_date=start_date, end_date=end_date, description=description,
                    website=website, scale=scale, status=status)
         return org
@@ -76,15 +108,45 @@ class Project(models.Model):
     class Meta:
         ordering =('name',)
 
-register(['view', 'edit', 'remove', 'add_member'], Project, app_label='DevClear')
+class ProjectImage(models.Model):
+    proj = models.ForeignKey(Project, related_name='images')
+    image = models.ImageField(upload_to='project')
 
-#class Post(models.Model):
+    @classmethod
+    def create(cls, proj, image):
+        image_instance = cls(proj=proj, image=image)
+        return image_instance
+
+register(['view_proj',
+
+          'add_member', 'can_post', 'can_comment',
+
+          'edit_proj', 'remove_member', 'downgrade_low_admin', 'make_low_admin', 'remove_low_admin',
+          'delete_proj', 'post_as_proj', 'comment_as_proj', 'upload_image', 'delete_image',
+          'delete_comment', 'delete_post',
+
+          'remove_proj',  'downgrade_high_admin', 'make_high_admin', 'remove_high_admin'
+
+
+         ], Project, app_label='DevClear')
+
+
+
+class OrgImageForm(ModelForm):
+    class Meta:
+        model = OrganizationImage
+        fields = ['image']
+
+class ProjectImageForm(ModelForm):
+    class Meta:
+        model = ProjectImage
+        fields = ['image']
 
 
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'sponsor_org','tagline','website', 'status', 'scale',
+        fields = ['name', 'profile_image', 'tagline','website', 'status', 'scale',
                   'start_date', 'end_date', 'short_description', 'description']
 
 class ProjectModForm(ModelForm):
@@ -98,7 +160,7 @@ class ProjectModForm(ModelForm):
 
     class Meta:
         model = Project
-        fields = ['name', 'tagline','website', 'status', 'scale',
+        fields = ['name', 'profile_image', 'tagline','website', 'status', 'scale',
                   'start_date', 'end_date', 'short_description', 'description']
 
 class OrganizationModForm(ModelForm):
@@ -108,17 +170,16 @@ class OrganizationModForm(ModelForm):
         for key in self.fields:
             self.fields[key].required = False
 
-
     class Meta:
         model = Project
-        fields = ['name', 'tagline', 'website', 'start_date', 'short_description', 'description']
+        fields = ['name', 'profile_image', 'tagline', 'website', 'start_date', 'short_description', 'description']
         #foreign key community
 
 class OrganizationForm(ModelForm):
 
     class Meta:
         model = Project
-        fields = ['name', 'tagline', 'website', 'start_date', 'short_description', 'description']
+        fields = ['name', 'profile_image', 'tagline', 'website', 'start_date', 'short_description', 'description']
         #foreign key community
 
 # Create your models here.

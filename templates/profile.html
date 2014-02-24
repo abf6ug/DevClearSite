@@ -7,8 +7,7 @@
 
     <div class="col-lg-2 well well-sm" style="height: 85%">
         <div style="padding-bottom: 10px">
-            <img class="img-circle" src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
-                    >
+            <img class="img" src="{{ MEDIA_URL }}{{ org.profile_image.url }}" width="100%">
         </div>
 
         <div style="padding-bottom: 10px"><h3>{{ org.name }}</h3></div>
@@ -16,18 +15,15 @@
         <div class="personal" style="padding-bottom: 10px">
             <div class="list-group">
                 <div class="list-group-item">
-                    <h4 class="list-group-item-heading">Email</h4>
+                    <h4 class="list-group-item-heading">{{ org.tagline }}</h4>
 
                     <p class="list-group-item-text"></p>
                 </div>
-                <div class="list-group-item">
-                    <h4 class="list-group-item-heading">Cell Number</h4>
-                    <p class="list-group-item-text"></p>
-                </div>
+
             </div>
         </div>
-        {% has_perm user 'view' org as check%}
-        {% if not check %}
+        {% has_perm user 'add_member' org as member%}
+        {% if not member%}
             <div class="list-group">
                 <div class="list-group-item">
                     Want to be a member of {{ org.name }}?
@@ -43,6 +39,16 @@
             </div>
         {% endif %}
 
+        {% has_perm user 'create_proj' org as create_proj%}
+        {% if create_proj%}
+           <div>
+
+        <a href="/{{ org.name }}/create_project/" class="btn btn-danger" type="button"
+               data-toggle="tooltip"
+               data-original-title="Edit this user">Create New Project?</a>
+
+            </div>
+        {% endif %}
 
     </div>
 
@@ -58,8 +64,8 @@
         <li><a href="#projects" data-toggle="tab">Projects</a></li>
         <li><a href="#members" data-toggle="tab">Members</a></li>
 
-        {% has_perm user 'add_project' org as check_admin %}
-        {% if check_admin %}
+        {% has_perm user 'edit_org' org as check_low_admin %}
+        {% if check_low_admin %}
             <li><a href="#pref" data-toggle="tab">Preferences</a></li>
         {% endif %}
 
@@ -106,9 +112,49 @@
         </div>
 
     </div>
+
+
     <div class="tab-pane fade" id="images">
-        Images
+        <div class="col-lg-12 container">
+            <div class="col-lg-5 well" style="padding-bottom: 10px">
+                <form method="post" name="image_upload" enctype="multipart/form-data">
+                    <input type="hidden" name="type" value="upload_image" >
+                    {{ image_form }}
+                    {% csrf_token %}
+                    <input type="submit" class="btn btn-primary" value="Upload Image!">
+                </form>
+            </div>
+
+
+        </div>
+        <div class="col-lg-12" style="overflow:auto; max-height: 65%">
+
+            {% for entry in org.images.all %}
+                <div class="col-lg-3 well well-sm" style="padding-bottom: 10px">
+                    <a href="{{ MEDIA_URL }}{{ entry.image.url }}"><img src="{{ MEDIA_URL }}{{ entry.image.url }}" width="100%"/></a>
+
+                    {% has_perm user 'upload_image' org as remove_image%}
+                    {% if remove_image %}
+                        <div class="col-lg-12" style="padding-top: 10px">
+                            <form method="post" name="remove_image">
+                                <input type="hidden" name="type" value="remove_image"/>
+                                <input type="hidden" name="image" value="{{ entry.pk }}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-block">Delete Image?</button>
+
+                            </form>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
     </div>
+
+
     <div class="tab-pane fade" id="projects">
         {% for proj in org.project_set.all %}
             <div class="col-lg-12 well well-sm container">
@@ -118,7 +164,7 @@
                         <h4><a href="/profile/{{ org.name }}/{{ proj.name }}/">{{ proj.name }}</a></h4>
                     </div>
                     <div>
-                        <img src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=135">
+                        <img src="{{ MEDIA_URL }}{{ org.profile_image.url }}" width = "100%">
                     </div>
                 </div>
                 <div class="col-lg-5">
@@ -163,63 +209,134 @@
         {% endfor %}
     </div>
     <div class="tab-pane fade" id="members">
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="panel panel-default">
 
                 <div class="panel-heading">Administrative Members</div>
                 <table class="table">
                     <tr>
                         <th>Member name</th>
-                        {% has_perm user 'add_member' org as check_user_admin %}
-                        {% if check_user_admin %}
+                        {% has_perm user 'make_high_admin' org as check_high_admin %}
+                        {% if check_high_admin %}
 
-                            <th>Drop Admin</th>
-                            <th>Drop Member</th>
+                            <th colspan="2">Adjust Permissions</th>
                         {% endif %}
                     </tr>
-                    <!-- Remove ability not functioning-->
-                    {% for member in org.members.all %}
-                        {% has_perm member 'add_member' org as check_member_admin %}
-                        {% if check_member_admin %}
-                            <tr>
-                                <td>{{ member.get_full_name }}</td>
-                                {% if check_user_admin %}
 
-                                    <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
-                                            data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
-                                    <td>
-                                        <form method="post" accept-charset="utf-8" name="downgrade" onsubmit="return confirm('Are you sure you want to revoke {{ member.get_full_name}}s privileges on {{ org.name }}?');">
-                                            <input type="hidden" name="user" value="{{ member.username }}"/>
-                                            <input type="hidden" name="type" value="downgrade"/>
+                    {% for member in high_admin %}
 
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-warning"><span
-                                                    class="glyphicon glyphicon-thumbs-down"></span></button>
-                                        </form>
-                                    </td>
-                                    <td>
-                                        <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove {{ member.get_full_name }} from {{ org.name }}?');">
-                                            <input type="hidden" name="user" value="{{ member.username }}"/>
-                                            <input type="hidden" name="type" value="remove"/>
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger"><span
-                                                    class="glyphicon glyphicon-remove"></span></button>
+                        <tr>
+                            <td>{{ member.get_full_name }}</td>
+                            {% if check_high_admin %}
 
-                                        </form>
-                                    </td>
-                                {% endif %}
-                            </tr>
-                        {% endif %}
+                                <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
+                                        data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
+                                <td>
+
+                                    <form method="post" accept-charset="utf-8" name="downgrade_high_admin" onsubmit="return confirm('Are you sure you want to revoke {{ member.get_full_name}}s privileges on {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="downgrade_high_admin"/>
+
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning"><span
+                                                class="glyphicon glyphicon-thumbs-down"></span></button>
+                                    </form>
+                                </td>
+                                <td>
+                                <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove {{ member.get_full_name }} from {{ org.name }}?');">
+                                    <input type="hidden" name="user" value="{{ member.username }}"/>
+                                    <input type="hidden" name="type" value="remove"/>
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger"><span
+                                            class="glyphicon glyphicon-remove"></span></button>
+
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+
 
                     {% empty %}
-                        <tr>Sorry, there are no admins currently.</tr>
+                        <tr><td colspan="3">Sorry, there are no admins currently.</tr>
                     {% endfor %}
 
 
                 </table>
             </div>
         </div>
-        <div class="col-lg-6">
+
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+
+                <div class="panel-heading">Moderators</div>
+                <table class="table">
+                    <tr>
+                        <th>Member name</th>
+                        {% has_perm user 'make_low_admin' org as check_low_admin %}
+
+                        {% if check_high_admin %}
+
+
+
+                        {% endif %}
+                        {% if check_low_admin %}
+
+                            <th colspan="3">Adjust Permissions</th>
+                        {% endif %}
+                    </tr>
+
+                    {% for member in low_admin %}
+
+                        <tr>
+                            <td>{{ member.get_full_name }}</td>
+
+                            {% if check_high_admin %}
+                                <td>
+                                    <form method="post" accept-charset="utf-8" name="make_high_admin" onsubmit="return confirm('Are you sure you want to revoke {{ member.get_full_name}}s privileges on {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="make_high_admin"/>
+
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success"><span
+                                                class="glyphicon glyphicon-thumbs-up"></span></button>
+                                    </form>
+                                </td>
+                            {% endif %}
+                            {% if check_low_admin %}
+
+                                <td>
+                                    <form method="post" accept-charset="utf-8" name="downgrade_low_admin" onsubmit="return confirm('Are you sure you want to revoke {{ member.get_full_name}}s privileges on {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="downgrade_low_admin"/>
+
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning"><span
+                                                class="glyphicon glyphicon-thumbs-down"></span></button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove {{ member.get_full_name }} from {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="remove"/>
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger"><span
+                                                class="glyphicon glyphicon-remove"></span></button>
+
+                                    </form>
+                                </td>
+                            {% endif %}
+                        </tr>
+
+
+                    {% empty %}
+                        <tr><td colspan="4">Sorry, there are no moderators currently.</td></tr>
+                    {% endfor %}
+
+
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-4">
 
             <div class="panel panel-default">
                 <div class="panel-heading">Members</div>
@@ -227,51 +344,46 @@
                     <tr>
                         <th>Member name</th>
 
-                        {% has_perm user 'add_member' org as check_user_admin %}
 
-                        {% if check_user_admin %}
+                        {% if check_low_admin %}
 
-                            <th>Give Admin</th>
-                            <th>Drop Member</th>
+                            <th colspan="2">Adjust Permissions</th>
 
                         {% endif %}
                     </tr>
-                    {% for member in org.members.all %}
-                        {% has_perm member 'add_member' org as check_member_admin %}
-                        {% if not check_member_admin %}
-                            <tr>
-                                <td>{{ member.get_full_name }}</td>
-                                {% if check_user_admin %}
+                    {% for member in members %}
+                        <tr>
+                            <td>{{ member.get_full_name }}</td>
+                            {% if check_low_admin %}
 
-                                    <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
-                                            data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
-                                    <td>
-                                        <form method="post" accept-charset="utf-8" name="upgrade" onsubmit="return confirm('Are you sure you want to give {{ member.get_full_name}}s admin privileges on {{ org.name }}?');">
-                                            <input type="hidden" name="user" value="{{ member.username }}"/>
-                                            <input type="hidden" name="type" value="upgrade"/>
+                                <!-- <td><a data-id="" class="open-removeModal btn btn-danger"
+                                        data-toggle="" href="#removeModal"><span class ="glyphicon glyphicon-remove"></span></a></td>-->
+                                <td>
+                                    <form method="post" accept-charset="utf-8" name="make_low_admin" onsubmit="return confirm('Are you sure you want to give {{ member.get_full_name}}s admin privileges on {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="make_low_admin"/>
 
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-succes"><span
-                                                    class="glyphicon glyphicon-thumbs-up"></span></button>
-                                        </form>
-                                    </td>
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-succes"><span
+                                                class="glyphicon glyphicon-thumbs-up"></span></button>
+                                    </form>
+                                </td>
 
-                                    <td>
-                                        <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove {{ member.get_full_name}} from {{ org.name }}?');">
-                                            <input type="hidden" name="user" value="{{ member.username }}"/>
-                                            <input type="hidden" name="type" value="remove"/>
+                                <td>
+                                    <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove {{ member.get_full_name}} from {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="remove"/>
 
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger"><span
-                                                    class="glyphicon glyphicon-remove"></span></button>
-                                        </form>
-                                    </td>
-                                {% endif %}
-                            </tr>
-                        {% endif %}
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger"><span
+                                                class="glyphicon glyphicon-remove"></span></button>
+                                    </form>
+                                </td>
+                            {% endif %}
+                        </tr>
 
                         {% empty %}<!-- Doesn't work because members isn't actually empty, we just filter results.  Look at generating admin and regular member list in view-->
-                        <tr>Sorry, there are no regular members yet.</tr>
+                        <tr><td colspan="3">Sorry, there are no regular members yet.</tr>
                     {% endfor %}
                 </table>
             </div>
@@ -286,7 +398,7 @@
                 <div class="panel-heading">Organization Info</div>
                 <!-- Table -->
                 <table class="table table-responsive">
-                    <form method="post" name="change_pref" onsubmit="return confirm('Are you sure you want to save these changes?');">
+                    <form method="post" name="change_pref" enctype="multipart/form-data" onsubmit="return confirm('Are you sure you want to save these changes?');">
                         <input type="hidden" name="type" value="change_pref"/>
                         <table class="table"> {% for field in mod_form %}
                             {% ifnotequal field.label "Description" %}
@@ -374,21 +486,24 @@
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">Delete your organization?</div>
+        {% has_perm user 'remove_org' org as check_high_admin%}
+        {% if check_high_admin %}
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Delete your organization?</div>
 
-                <form method="post" name="remove_org" onsubmit="return confirm('Are you sure you want to remove your project?');">
-                    <input type="hidden" name="type" value="remove_org"/>
-                    {% csrf_token %}
-                    <br>
-                    <div class="wrapper" style="text-align: center">
-                        <button type="submit" class="btn btn-danger" style="width: 80%">Remove {{ org.name }}</button>
-                    </div>
-                </form>
+                    <form method="post" name="remove_org" onsubmit="return confirm('Are you sure you want to remove your project?');">
+                        <input type="hidden" name="type" value="remove_org"/>
+                        {% csrf_token %}
+                        <br>
+                        <div class="wrapper" style="text-align: center">
+                            <button type="submit" class="btn btn-danger" style="width: 80%">Remove {{ org.name }}</button>
+                        </div>
+                    </form>
 
+                </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 
 

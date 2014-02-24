@@ -1,38 +1,104 @@
 {%  extends "home.html" %}
+{% load widget_tweaks %}
 <!-- TO DO: rearrange tag line and short description to be at bottom and give text area-->
 
 {% block content %}
 
     <div class="well well-sm col-lg-8">
         <div class="col-lg-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">Organization Info!</div>
-                <table class="table">
-                    <form action="" class="form-signin" method="post" accept-charset="utf-8" name = "register">
+        <div class="panel panel-default">
+            <!-- Default panel contents -->
+            <div class="panel-heading">Organization Info</div>
+            <!-- Table -->
+            <table class="table table-responsive">
+                <form method="post" name="create_org" enctype="multipart/form-data">
+                
+                    <table class="table"> {% for field in form %}
+                        {% ifnotequal field.label "Description" %}
+                            {% ifnotequal field.label "Short description" %}
 
-                        <tr><td>Name:</td><td><input class="form-control" type="text" placeholder="Organization Name" name="name" required></td></tr>
-                        <tr><td>Short Description:</td><td><input class="form-control" type="text" placeholder="Shown when people search for your organization" name="short"></td></tr>
-                        <tr><td>Tag line:</td><td><input class="form-control" type="text" placeholder="What's your organization's motto" name="tagline"  required></td></tr>
-                        <tr><td>Start Date:</td><td><input class="form-control" type="date" placeholder="When did this organization begin?" name="date" required></td></tr>
-                        <tr><td>Website:</td><td><input class="form-control" type="url" placeholder="What's your website?" name="website" required></td></tr>
+
+                                <div class="fieldWrapper">
+                                    <tr>
+
+                                        <td><b>{{ field.label }}</b></td>
+
+                                        <td>
+                                            {% ifnotequal field.label "Start date" %}
+                                                {% render_field field class+="input-sm" style+="width: 100%" %}
+                                            {% else %}
+                                                {% render_field form.start_date class+="input-sm" type="date" style+="width: 100%" %}
+                                            {% endifnotequal %}
+
+                                        </td>
+                                        {% if field.errors %}
+                                            <td>{{ field.errors }}
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                </div>
+                            {% endifnotequal %}
+
+                        {% endifnotequal %}
+                    {% endfor %}</table>
+                    {% csrf_token %}
 
 
-                </table>
-            </div>
+            </table>
+
+
         </div>
-        <div class="col-lg-6">
-            <div class="panel panel-default" style="">
-                <div class="panel-heading">What is your organization?</div>
-                <table class="table">
-                    <tr><td><textarea placeholder="What do you all do?"  name="description" style="width:100%" rows="7"></textarea></td></tr>
-                </table>
-            </div>
+
+
+        <div class="panel panel-default">
+            <div class="panel-heading">Abbreviated Description</div>
+            <table class="table">
+                <tr>
+                    <td>
+                        {% render_field form.short_description class+="input-sm" style+="width: 100%" rows="5" placeholder="Please explain what your organization does in 300 characters or less"%}
+                    </td>
+                </tr>
+                {% if form.description.errors%}
+                    <tr>
+                        <td>{{ form.description.errors }}
+                        </td>
+                    </tr>
+                {% endif %}
+
+
+            </table>
         </div>
-        <div class="col-lg-6">
+    </div>
+
+    <div class="col-lg-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">What is your project? In detail...</div>
+            <table class="table">
+                <tr>
+                    <td>
+                        {% render_field form.description class+="input-sm" style+="width: 100%" rows="8" placeholder="Please explain what your organization does in 2000 characters or less"%}
+                    </td>
+                </tr>
+                {% if form.description.errors%}
+                    <tr>
+                        <td>{{ form.description.errors }}
+                        </td>
+                    </tr>
+                {% endif %}
+
+
+            </table>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="panel">
             {% csrf_token %}
-            <button class="btn-lg btn-block btn-success" type="submit">Create!</button>
+            <button class="btn-lg btn-block btn-success" type="submit">Save Changes!</button>
             </form>
         </div>
+    </div>
+
     </div>
 
 

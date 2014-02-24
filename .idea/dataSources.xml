@@ -1,35 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DataSourceManagerImpl" format="xml" hash="3963684937">
-    <data-source source="LOCAL" name="Django default" uuid="eb45a4d8-da10-4813-933c-3a1e43030a0d">
-      <driver-ref>mysql</driver-ref>
-      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql:devclearproto</jdbc-url>
+  <component name="DataSourceManagerImpl" format="xml" hash="2276546539">
+    <data-source source="LOCAL" name="Django default" uuid="e07b6edc-ff84-4627-ad42-69764e508cc8">
+      <driver-ref>postgresql</driver-ref>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://127.0.0.1/devclearproto</jdbc-url>
       <user-name>postgres</user-name>
-      <user-password>dfe2dffadf92dfc8dfdcdf8bdfdedffd</user-password>
-      <libraries>
-        <library>
-          <url>file://$USER_HOME$/.PyCharm30/config/jdbc-drivers/mysql-connector-license.txt</url>
-        </library>
-        <library>
-          <url>jar://$USER_HOME$/.PyCharm30/config/jdbc-drivers/mysql-connector-java-5.1.26-bin.jar!/</url>
-        </library>
-      </libraries>
-    </data-source>
-    <data-source source="LOCAL" name="Django devclear" uuid="4dc16977-7a29-4bac-a77f-87db334ddf95">
-      <driver-ref>mysql</driver-ref>
-      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://127.0.0.1:3306/devclear</jdbc-url>
-      <user-name>root</user-name>
-      <user-password>dfe2dffadf92dfc8dfdcdf8bdfdedffd</user-password>
-      <libraries>
-        <library>
-          <url>file://$USER_HOME$/.PyCharm30/config/jdbc-drivers/mysql-connector-license.txt</url>
-        </library>
-        <library>
-          <url>file://$USER_HOME$/.PyCharm30/config/jdbc-drivers/mysql-connector-java-5.1.26-bin.jar</url>
-        </library>
-      </libraries>
+      <user-password>dfdadfc5dfd9dfdedfcddfd8dfcfdfd9</user-password>
+      <libraries />
     </data-source>
   </component>
 </project>
