@@ -3,9 +3,9 @@ from django.contrib.auth.models import User
 from django.forms import ModelForm
 from object_permissions import register
 
-
+#add email, hq location, region, area of development, images, org landline/main phone
 class Organization(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
 
     members = models.ManyToManyField(User)
     projects = models.ManyToManyField('Project', blank=True)
@@ -35,9 +35,9 @@ class Organization(models.Model):
 
 register(['view', 'edit', 'remove', 'add_project', 'add_member'], Organization, app_label='DevClear')
 
-
+#add email, location, communities, region, images
 class Project(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     #    #ID?
 
     members = models.ManyToManyField(User)
@@ -76,19 +76,49 @@ class Project(models.Model):
     class Meta:
         ordering =('name',)
 
+register(['view', 'edit', 'remove', 'add_member'], Project, app_label='DevClear')
+
+#class Post(models.Model):
+
+
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'sponsor_org', 'status', 'scale', 'website', 'tagline', 'short_description',
-                  'start_date', 'end_date', 'description']
+        fields = ['name', 'sponsor_org','tagline','website', 'status', 'scale',
+                  'start_date', 'end_date', 'short_description', 'description']
+
+class ProjectModForm(ModelForm):
 
 
+    def __init__(self, *args, **kwargs):
+        super(ProjectModForm, self).__init__(*args, **kwargs)
+        for key in self.fields:
+            self.fields[key].required = False
 
-class OrganizationForm(ModelForm):
+
     class Meta:
         model = Project
-        fields = ['name', 'website', 'tagline', 'short_description',
-                  'start_date', 'description']
+        fields = ['name', 'tagline','website', 'status', 'scale',
+                  'start_date', 'end_date', 'short_description', 'description']
+
+class OrganizationModForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(OrganizationModForm, self).__init__(*args, **kwargs)
+
+        for key in self.fields:
+            self.fields[key].required = False
+
+
+    class Meta:
+        model = Project
+        fields = ['name', 'tagline', 'website', 'start_date', 'short_description', 'description']
+        #foreign key community
+
+class OrganizationForm(ModelForm):
+
+    class Meta:
+        model = Project
+        fields = ['name', 'tagline', 'website', 'start_date', 'short_description', 'description']
         #foreign key community
 
 # Create your models here.
