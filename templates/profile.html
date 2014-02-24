@@ -193,7 +193,7 @@
                                             <input type="hidden" name="type" value="downgrade"/>
 
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-warning"><span
+                                            <button type="submit" class="btn btn-warning" onclick="confirm('downgradeAdmin')"><span
                                                     class="glyphicon glyphicon-thumbs-down"></span></button>
                                         </form>
                                     </td>
@@ -202,7 +202,9 @@
                                             <input type="hidden" name="user" value="{{ member.username }}"/>
                                             <input type="hidden" name="type" value="remove"/>
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger"><span
+
+
+                                                            <button type="submit" class="btn btn-danger" onclick="confirm('removeMember')"><span
                                                     class="glyphicon glyphicon-remove"></span></button>
 
                                         </form>
@@ -210,6 +212,7 @@
                                 {% endif %}
                             </tr>
                         {% endif %}
+
 
                     {% empty %}
                         <tr>Sorry, there are no admins currently.</tr>
@@ -251,7 +254,7 @@
                                             <input type="hidden" name="type" value="upgrade"/>
 
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-succes"><span
+                                            <button type="submit" class="btn btn-succes" onclick="confirm('upgradeAdmin')"><span
                                                     class="glyphicon glyphicon-thumbs-up"></span></button>
                                         </form>
                                     </td>
@@ -262,7 +265,7 @@
                                             <input type="hidden" name="type" value="remove"/>
 
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger"><span
+                                            <button type="submit" class="btn btn-danger" onclick="confirm('removeMember')"><span
                                                     class="glyphicon glyphicon-remove"></span></button>
                                         </form>
                                     </td>

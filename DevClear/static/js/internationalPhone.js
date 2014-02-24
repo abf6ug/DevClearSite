@@ -9,11 +9,13 @@ function phonenumber(inputtxt)
 
     if(inputtxt.match(international) || inputtxt.match(american))
     {
+        $('#username').popover('hide');
+
         return true;
     }
     else
     {
-        alert("Not a valid Phone Number");
+        $('#username').popover('show');
         return false;
     }
 }

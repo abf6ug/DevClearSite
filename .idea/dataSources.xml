@@ -4,9 +4,9 @@
     <data-source source="LOCAL" name="Django default" uuid="eb45a4d8-da10-4813-933c-3a1e43030a0d">
       <driver-ref>mysql</driver-ref>
       <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql:devclearproto</jdbc-url>
+      <jdbc-url>jdbc:postgresql://127.0.0.1/devclearproto</jdbc-url>
       <user-name>postgres</user-name>
-      <user-password>dfe2dffadf92dfc8dfdcdf8bdfdedffd</user-password>
+      <user-password>dfdadfc5dfd9dfdedfcddfd8dfcfdfd9</user-password>
       <libraries>
         <library>
           <url>file://$USER_HOME$/.PyCharm30/config/jdbc-drivers/mysql-connector-license.txt</url>
