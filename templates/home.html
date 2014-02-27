@@ -6,9 +6,9 @@
 
         <div class="col-lg-2">
             <div style="padding-bottom: 10px">
-                <h3> <a href="profile.html"> <img class="img-circle"
+                <h3><img class="img-circle"
                                                   src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
-                                                  alt="User Pic"> {{ user.first_name }} </a></h3>
+                                                  alt="User Pic"> {{ user.first_name }}</h3>
             </div>
 
             <div class="personal">
@@ -27,16 +27,25 @@
             <div class="personal">
                 <h3>Organizations</h3>
                 <div class="list-group">
-                    {% for org in  user.organization_set.all%}
+                    {% for org in user.organization_set.all|slice:":3" %}
                         <li class="list-group-item">
                             <h4 class="list-group-item-heading"><a href="/profile/{{ org.name }}/">{{ org.name }}</a></h4>
                             <p class="list-group-item-text">{{ org.tagline }}</p>
                         </li>
                     {% endfor %}
+                    {% if user.organization_set.all.count|length > 3 %}
+                        <div class="pull-right">
+                            <a href="/home/all_organizations/">Display more projects</a>
+                        </div>
+                    {% endif %}
+
                 </div>
+                <div class="col-lg-12">
+
                 <a href="{% url "register_org" %}" class="btn btn-danger" type="button"
                    data-toggle="tooltip"
                    data-original-title="Edit this user">Register Organization</a>
+                </div>
             </div>
         </div>
 
