@@ -9,9 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User, Group
 from django.forms.models import model_to_dict
-from DevClear.models import Organization,  OrganizationForm,  OrganizationModForm, OrganizationImage,  OrgImageForm, Project, ProjectImage, ProjectImageForm, ProjectForm, ProjectModForm
+from DevClear.models import Organization,  OrganizationForm,  OrganizationModForm, Post, PostForm, Image,  ImageForm, Project, ProjectForm, ProjectModForm
 import object_permissions as perm
-
 
 ORG_MEMBER_PERMS = ['add_member', 'join_proj', 'can_post', 'can_comment']
 
@@ -175,116 +174,149 @@ def register_org(request):
 @login_required
 def view_profile(request, org_name=""):
     org = Organization.objects.get(name=org_name)
-    #print perm.get_user_perms(request.user, org)
     response = ''
-    mod_form = None
-    image_form = None
 
+    image_form =None
+    mod_form = None
+    post_form = None
 
 
 
     #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), HIGH_ADMIN_PERMS, org)
     #Organization.objects.get
+    if request.method == 'POST':
+        if request.POST.get("type") == "comment":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                feed_post = Post.objects.get(pk=request.POST.get('feed_post'))
+                post = Post.create(request.user, feed_post, request.POST.get('text'))
+                post.save()
+                profile_url = '/profile/' + org.name + '/'
+                return HttpResponseRedirect(profile_url)
 
+            else:
+                fields_dict = model_to_dict(org)
+                mod_form = OrganizationModForm(fields_dict)
+                image_form = ImageForm()
 
-    if request.method == 'POST' and request.POST.get("type") == "add_user":
-        org.members.add(request.user)
-        request.user.set_perms(ORG_MEMBER_PERMS, org)
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
-
-    elif request.method == 'POST' and request.POST.get("type") == "upload_image":
-        image_form = OrgImageForm(request.POST, request.FILES)
-        if image_form.is_valid():
-            image_file = request.FILES['image']
-            image = OrganizationImage.create(org, image_file)
-            image.save()
+        elif request.POST.get("type") == "post":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                post = Post.create(request.user, org, request.POST.get('text'))
+                post.save()
             profile_url = '/profile/' + org.name + '/'
             return HttpResponseRedirect(profile_url)
 
-    elif request.method == 'POST' and request.POST.get("type") == "remove_image":
-        image = OrganizationImage.objects.get(pk=request.POST.get("image"))
-        image.image.delete(save=True)
-        image.delete()
 
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
+        elif request.POST.get("type") == "add_user":
+            org.members.add(request.user)
+            request.user.set_perms(ORG_MEMBER_PERMS, org)
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
 
-    elif request.method == 'POST' and request.POST.get("type") == "remove":
-        user = User.objects.get(username=request.POST.get("user"))
-        org.members.remove(user)
-        user.revoke_all(org)
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
-        #check permissions in html
+        elif request.POST.get("type") == "upload_image":
+            image_form = ImageForm(request.POST, request.FILES)
+            if image_form.is_valid():
+                image_file = request.FILES['image']
+                image = Image.create(org, image_file)
+                image.save()
+                profile_url = '/profile/' + org.name + '/'
+                return HttpResponseRedirect(profile_url)
+            else:
+                fields_dict = model_to_dict(org)
+                mod_form = OrganizationModForm(fields_dict)
+                post_form = PostForm()
 
-    elif request.method == 'POST' and request.POST.get("type") == "make_high_admin":
-        user = User.objects.get(username=request.POST.get("user"))
-        user.set_perms(ORG_HIGH_ADMIN_PERMS, org)
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
+        elif request.POST.get("type") == "remove_image":
+            image = Image.objects.get(pk=request.POST.get("image"))
+            image.image.delete(save=True)
+            image.delete()
 
-    elif request.method == 'POST' and request.POST.get("type") == "make_low_admin":
-        user = User.objects.get(username=request.POST.get("user"))
-        user.set_perms(ORG_LOW_ADMIN_PERMS, org)
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
 
-    elif request.method == 'POST' and request.POST.get("type") == "downgrade_high_admin":
-        user = User.objects.get(username=request.POST.get("user"))
-        user.set_perms(ORG_LOW_ADMIN_PERMS, org)
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
+        elif request.POST.get("type") == "remove":
+            user = User.objects.get(username=request.POST.get("user"))
+            org.members.remove(user)
+            user.revoke_all(org)
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
+            #check permissions in html
 
-    elif request.method == 'POST' and request.POST.get("type") == "downgrade_low_admin":
-        user = User.objects.get(username=request.POST.get("user"))
-        user.set_perms(ORG_MEMBER_PERMS, org)
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
+        elif request.POST.get("type") == "make_high_admin":
+            user = User.objects.get(username=request.POST.get("user"))
+            user.set_perms(ORG_HIGH_ADMIN_PERMS, org)
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
 
-    elif request.method == 'POST' and request.POST.get("type") == "remove_org":
-        org.delete()
-        return HttpResponseRedirect('/home/')
+        elif request.POST.get("type") == "make_low_admin":
+            user = User.objects.get(username=request.POST.get("user"))
+            user.set_perms(ORG_LOW_ADMIN_PERMS, org)
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
 
-    elif request.method == 'POST' and request.POST.get("type") == "change_pref":
-        mod_form = OrganizationModForm(request.POST, request.FILES)
+        elif request.POST.get("type") == "downgrade_high_admin":
+            user = User.objects.get(username=request.POST.get("user"))
+            user.set_perms(ORG_LOW_ADMIN_PERMS, org)
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
 
-        if mod_form.is_valid():
-            new_name = mod_form.cleaned_data['name']
-            new_tagline = mod_form.cleaned_data['tagline']
-            new_website = mod_form.cleaned_data['website']
-            new_start_date = mod_form.cleaned_data['start_date']
-            new_short = mod_form.cleaned_data['short_description']
-            new_description = mod_form.cleaned_data['description']
+        elif request.POST.get("type") == "downgrade_low_admin":
+            user = User.objects.get(username=request.POST.get("user"))
+            user.set_perms(ORG_MEMBER_PERMS, org)
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
 
-            new_image = mod_form.cleaned_data['profile_image']
-            if not new_name == org.name:
-                if not Organization.objects.filter(name=new_name).count():
-                    org.name = new_name
-            if not new_tagline == org.tagline:
-                org.tagline = new_tagline
-            if not new_start_date == org.start_date :
-                org.start_date = new_start_date
-            if not new_website == org.website:
-                org.website = new_website
-            if not new_short == org.short_description:
-                org.short_description = new_short
-            if not new_description == org.description:
-                org.description = new_description
+        elif request.POST.get("type") == "remove_org":
+            org.delete()
+            return HttpResponseRedirect('/home/')
 
-            if new_image is not None:
-                org.profile_image.delete()
-                org.profile_image = new_image
+        elif request.POST.get("type") == "change_pref":
+            mod_form = OrganizationModForm(request.POST, request.FILES)
 
-            org.save()
+            if mod_form.is_valid():
+                new_name = mod_form.cleaned_data['name']
+                new_tagline = mod_form.cleaned_data['tagline']
+                new_website = mod_form.cleaned_data['website']
+                new_start_date = mod_form.cleaned_data['start_date']
+                new_short = mod_form.cleaned_data['short_description']
+                new_description = mod_form.cleaned_data['description']
 
-        profile_url = '/profile/' + org.name + '/'
-        return HttpResponseRedirect(profile_url)
+                new_image = mod_form.cleaned_data['profile_image']
+
+                if not new_name == org.name:
+                    if not Organization.objects.filter(name=new_name).count():
+                        org.name = new_name
+                if not new_tagline == org.tagline:
+                    org.tagline = new_tagline
+                if not new_start_date == org.start_date :
+                    org.start_date = new_start_date
+                if not new_website == org.website:
+                    org.website = new_website
+                if not new_short == org.short_description:
+                    org.short_description = new_short
+                if not new_description == org.description:
+                    org.description = new_description
+
+                if new_image is not None:
+                    org.profile_image.delete()
+                    org.profile_image = new_image
+
+                org.save()
+
+                profile_url = '/profile/' + org.name + '/'
+                return HttpResponseRedirect(profile_url)
+            else:
+                image_form = ImageForm()
+                post_form = PostForm()
+
 
     else:
         fields_dict = model_to_dict(org)
-        mod_form = OrganizationModForm(fields_dict, instance=org)
-        image_form = OrgImageForm()
+        mod_form = OrganizationModForm(fields_dict)
+        image_form = ImageForm()
+        post_form = PostForm()
+
 
     high_admin = []
     low_admin = []
@@ -300,9 +332,11 @@ def view_profile(request, org_name=""):
 
 
     return render_to_response('profile.html', {'org': org,
-                                               'mod_form': mod_form,
+
                                                'response': response,
                                                'image_form':image_form,
+                                               'mod_form': mod_form,
+                                               'post_form':post_form,
                                                'high_admin': high_admin,
                                                'low_admin': low_admin,
                                                'members':member},
@@ -314,27 +348,53 @@ def view_project_profile(request, org_name="", proj_name=""):
     proj = Project.objects.get(name=proj_name, sponsor_org=org)
     image_form = None
     mod_form = None
+    post_form = None
 
     if request.method == 'POST':
+        if request.POST.get("type") == "comment":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                feed_post = Post.objects.get(pk=request.POST.get('feed_post'))
+                post = Post.create(request.user, feed_post, request.POST.get('text'))
+                post.save()
 
-        if request.POST.get("type") == "add_user":
+                profile_url = '/profile/' + org.name + '/' + proj.name
+                return HttpResponseRedirect(profile_url)
+            else:
+                fields_dict = model_to_dict(proj)
+                mod_form = ProjectModForm(fields_dict, instance=proj)
+                image_form = ImageForm()
+
+        elif request.POST.get("type") == "post":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                post = Post.create(request.user, proj, request.POST.get('text'))
+                post.save()
+            profile_url = '/profile/' + org.name + '/' + proj.name
+            return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "add_user":
             proj.members.add(request.user)
             request.user.set_perms(PROJ_MEMBER_PERMS, proj)
             profile_url = '/profile/' + org.name + '/' + proj.name
             return HttpResponseRedirect(profile_url)
-    #Fix
+
         elif request.POST.get("type") == "upload_image":
-            image_form = ProjectImageForm(request.POST, request.FILES)
+            image_form = ImageForm(request.POST, request.FILES)
             if image_form.is_valid():
                 image_file = request.FILES['image']
-                image = ProjectImage.create(proj, image_file)
+                image = Image.create(proj, image_file)
                 image.save()
 
                 profile_url = '/profile/' + org.name + '/' + proj.name
                 return HttpResponseRedirect(profile_url)
+            else:
+                fields_dict = model_to_dict(proj)
+                mod_form = ProjectModForm(fields_dict, instance=proj)
+                post_form = PostForm()
 
         elif request.POST.get("type") == "remove_image":
-            image = ProjectImage.objects.get(pk=request.POST.get("image"))
+            image = Image.objects.get(pk=request.POST.get("image"))
             image.image.delete(save=True)
             image.delete()
 
@@ -423,10 +483,14 @@ def view_project_profile(request, org_name="", proj_name=""):
                 proj.save()
                 profile_url = '/profile/' + org.name + '/' +proj.name
                 return HttpResponseRedirect(profile_url)
+            else:
+                post_form = PostForm()
+                image_form = ImageForm()
     else:
             fields_dict = model_to_dict(proj)
             mod_form = ProjectModForm(fields_dict, instance=proj)
-            image_form = ProjectImageForm()
+            image_form = ImageForm()
+            post_form = PostForm()
 
 
 
@@ -443,8 +507,9 @@ def view_project_profile(request, org_name="", proj_name=""):
             member.append(user)
 
     return render_to_response('project_profile.html', {'proj': proj,
-                                                        'mod_form': mod_form,
                                                         'image_form': image_form,
+                                                        'mod_form': mod_form,
+                                                        'post_form': post_form,
                                                         'high_admin': high_admin,
                                                        'low_admin': low_admin,
                                                        'members':member}, context_instance=RequestContext(request))

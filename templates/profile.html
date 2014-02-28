@@ -41,11 +41,11 @@
 
         {% has_perm user 'create_proj' org as create_proj%}
         {% if create_proj%}
-           <div>
+            <div>
 
-        <a href="/{{ org.name }}/create_project/" class="btn btn-danger" type="button"
-               data-toggle="tooltip"
-               data-original-title="Edit this user">Create New Project?</a>
+                <a href="/{{ org.name }}/create_project/" class="btn btn-danger" type="button"
+                   data-toggle="tooltip"
+                   data-original-title="Edit this user">Create New Project?</a>
 
             </div>
         {% endif %}
@@ -59,7 +59,8 @@
     <div>
     <!-- May have to activate javascript, look at bootstrap docs if problem-->
     <ul id="profile" class="nav nav-pills" style="padding-bottom: 10px">
-        <li class="active"><a href="#info" data-toggle="tab">Info</a></li>
+        <li class=""><a href="#info" data-toggle="tab">Info</a></li>
+        <li class="active"><a href="#feed" data-toggle="tab">Feed</a></li>
         <li><a href="#images" data-toggle="tab">Images</a></li>
         <li><a href="#projects" data-toggle="tab">Projects</a></li>
         <li><a href="#members" data-toggle="tab">Members</a></li>
@@ -72,7 +73,7 @@
     </ul>
 
     <div id="profileTabContent" class="tab-content" style="max-height: 90%;overflow: auto">
-    <div class="tab-pane fade active in" id="info">
+    <div class="tab-pane fade" id="info">
         <div class="col-lg-6">
             <div class="panel panel-default">
                 <!-- Default panel contents -->
@@ -114,16 +115,77 @@
     </div>
 
 
-    <div class="tab-pane fade" id="images">
-        <div class="col-lg-12 container">
-            <div class="col-lg-5 well" style="padding-bottom: 10px">
-                <form method="post" name="image_upload" enctype="multipart/form-data">
-                    <input type="hidden" name="type" value="upload_image" >
-                    {{ image_form }}
-                    {% csrf_token %}
-                    <input type="submit" class="btn btn-primary" value="Upload Image!">
-                </form>
+    <div class="tab-pane fade active in" id="feed">
+
+
+        {% has_perm user 'can_post' org as can_post %}
+        {% if can_post %}
+            <div class="col-lg-10">
+
+                <div class="col-lg-7 well well-sm">
+                    <form method="post" name="post_form">
+                        <input type="hidden" name="type" value="post"/>
+                        {% render_field post_form.text class="input-sm" style="width: 90%" rows="3"%}
+                        {%  csrf_token %}
+                        <button type="submit" class="btn btn-primary">Post</button>
+                    </form>
+                </div>
             </div>
+        {% endif %}
+        <div class="col-lg-10" style="overflow:auto; max-height: 84%">
+            {% for post in org.posts.all reversed %}
+                <div id="posts" class="well well-sm col-lg-7">
+                    {{ post.text }}<br>
+
+                    {{ post.user.get_full_name }}<br>
+                    {{ post.timestamp }}
+                    {% has_perm user 'can_comment' org as can_comment %}
+                    {% if can_comment %}
+                        <form method="post">
+                            <input type="hidden" name="type" value="comment"/>
+                            <input type="hidden" name="feed_post" value="{{ post.pk }}"/>
+
+                            {% render_field post_form.text class="input-sm" style="width: 85%" rows="2"%}
+                            {%  csrf_token %}
+                            <button type="submit" class="btn btn-primary">Comment</button>
+                        </form>
+
+                    {% endif %}
+
+
+                    <div id="comments" class="col-lg-12">
+                        {%for comment in post.comments.all reversed %}
+                            <div id="comment" class="well well-sm">
+
+                                {{ comment.text }}<br>
+                                {{ comment.user.get_full_name }}<br>
+                                {{ comment.timestamp }}<br>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            {% endfor %}
+        </div>
+
+    </div>
+
+
+    <div class="tab-pane fade" id="images">
+
+        <div class="col-lg-12 container">
+
+            {% has_perm user 'upload_image' org as upload_image%}
+            {% if upload_image %}
+                <div class="col-lg-5 well" style="padding-bottom: 10px">
+                    <form method="post" name="image_upload" enctype="multipart/form-data">
+                        <input type="hidden" name="type" value="upload_image" >
+                        {{ image_form }}
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-primary" value="Upload Image!">
+                    </form>
+                </div>
+            {% endif %}
 
 
         </div>
@@ -131,8 +193,7 @@
 
             {% for entry in org.images.all %}
                 <div class="col-lg-3 well well-sm" style="padding-bottom: 10px">
-                    <a href="{{ MEDIA_URL }}{{ entry.image.url }}"><img src="{{ MEDIA_URL }}{{ entry.image.url }}" width="100%"/></a>
-
+                    <a href="{{ MEDIA_URL }}{{ entry.image.url }}"><img src="{{ MEDIA_URL }}{{ entry.thumbnail.url }}" width="100%"/></a>
                     {% has_perm user 'upload_image' org as remove_image%}
                     {% if remove_image %}
                         <div class="col-lg-12" style="padding-top: 10px">
@@ -243,15 +304,15 @@
                                     </form>
                                 </td>
                                 <td>
-                                <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove {{ member.get_full_name }} from {{ org.name }}?');">
-                                    <input type="hidden" name="user" value="{{ member.username }}"/>
-                                    <input type="hidden" name="type" value="remove"/>
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger"><span
-                                            class="glyphicon glyphicon-remove"></span></button>
+                                    <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to remove {{ member.get_full_name }} from {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="remove"/>
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger"><span
+                                                class="glyphicon glyphicon-remove"></span></button>
 
-                                </form>
-                            </td>
+                                    </form>
+                                </td>
                             {% endif %}
                         </tr>
 

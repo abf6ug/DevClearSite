@@ -8,7 +8,7 @@
 
 {% block left_side_bar %}
 
-    <div class="col-lg-2 well well-sm" style="height: 85%">
+    <div class="col-lg-2 well well-sm" style="height: 90%">
         <div style="padding-bottom: 10px">
             <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%" >
         </div>
@@ -59,7 +59,9 @@
     <div>
     <!-- May have to activate javascript, look at bootstrap docs if problem-->
     <ul id="profile" class="nav nav-pills" style="padding-bottom: 10px">
-        <li class="active"><a href="#info" data-toggle="tab">Info</a></li>
+        <li><a href="#info" data-toggle="tab">Info</a></li>
+        <li class="active"><a href="#feed" data-toggle="tab">Feed</a></li>
+
         <li><a href="#images" data-toggle="tab">Images</a></li>
         <li><a href="#members" data-toggle="tab">Members</a></li>
 
@@ -70,8 +72,8 @@
 
     </ul>
 
-    <div id="profileTabContent" class="tab-content" style="max-height: 90%;overflow: auto">
-    <div class="tab-pane fade active in" id="info">
+    <div id="profileTabContent" class="tab-content" style="max-height: 100%;overflow: auto">
+    <div class="tab-pane fade" id="info">
         <div class="col-lg-6">
             <div class="panel panel-default">
                 <!-- Default panel contents -->
@@ -119,6 +121,63 @@
         </div>
 
     </div>
+
+    <div class="tab-pane fade active in" id="feed">
+
+
+
+        {% has_perm user 'can_post' proj as can_post %}
+        {% if can_post %}
+            <div class="col-lg-10">
+                <div class="col-lg-7 well well-sm">
+                    <form method="post" name="post_form">
+                        <input type="hidden" name="type" value="post"/>
+                        {% render_field post_form.text class="input-sm" style="width: 90%" rows="3"%}
+                        {%  csrf_token %}
+                        <button type="submit" class="btn btn-primary">Post</button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+        <div class="col-lg-10" style="overflow:auto; max-height: 84%">
+            {% for post in proj.posts.all reversed %}
+                <div id="posts" class="well well-sm col-lg-7">
+                    {{ post.text }}<br>
+
+                    {{ post.user.get_full_name }}<br>
+                    {{ post.timestamp }}
+                    {% has_perm user 'can_comment' proj as can_comment %}
+                    {% if can_comment %}
+                        <form method="post">
+                            <input type="hidden" name="type" value="comment"/>
+                            <input type="hidden" name="feed_post" value="{{ post.pk }}"/>
+
+                            {% render_field post_form.text class="input-sm" style="width: 100%" rows="2"%}
+                            {%  csrf_token %}
+                            <button type="submit" class="btn btn-primary">Comment</button>
+                        </form>
+
+                    {% endif %}
+
+
+                    <div id="comments" class="col-lg-12">
+
+                        {%for comment in post.comments.all reversed %}
+                            <div id="comment" class="well well-sm">
+                                {{ comment.text }}<br>
+                                {{ comment.user.get_full_name }}<br>
+                                {{ comment.timestamp }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            {% endfor %}
+        </div>
+
+    </div>
+
+
     <div class="tab-pane fade" id="images">
         <div class="col-lg-12 container">
 

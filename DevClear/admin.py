@@ -1,8 +1,8 @@
 from django.contrib import admin
-from DevClear.models import Organization, Project, OrganizationImage
+from DevClear.models import Organization, Project, Image
 
 class OrganizationImageInline(admin.TabularInline):
-    model = OrganizationImage
+    model = Image
     extra = 3
 
 class OrganizationImageAdmin(admin.ModelAdmin):
@@ -10,6 +10,5 @@ class OrganizationImageAdmin(admin.ModelAdmin):
 
 admin.site.register(Organization)
 admin.site.register(Project)
-admin.site.register(OrganizationImage)
 
 

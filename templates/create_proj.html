@@ -5,10 +5,10 @@
 {% block left_side_bar %}
     <div class="col-lg-2 well well-sm" style="height: 85%">
         <div style="padding-bottom: 10px">
-            <a href="profile/{{ org.name }}"><img class="img" src="{{ MEDIA_URL }}{{ org.profile_image.url }}" width="100%"></a>
+            <a href="/profile/{{ org.name }}"><img class="img" src="{{ MEDIA_URL }}{{ org.profile_image.url }}" width="100%"></a>
         </div>
 
-        <div style="padding-bottom: 10px"><a href="profile/{{ org.name }}"><h3>{{ org.name }}</h3></a></div>
+        <div style="padding-bottom: 10px"><a href="/profile/{{ org.name }}"><h3>{{ org.name }}</h3></a></div>
 
         <div class="personal" style="padding-bottom: 10px">
             <div class="list-group">

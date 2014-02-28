@@ -2,8 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 from django.forms import ModelForm
 from object_permissions import register
-import object_permissions
-import os
+import datetime
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
 
 #add email, hq location, region, area of development, images, org landline/main phone, profile image
 class Organization(models.Model):
@@ -23,6 +24,9 @@ class Organization(models.Model):
 
     website = models.URLField(blank=True)
 
+    posts = generic.GenericRelation('Post')
+    images = generic.GenericRelation('Image')
+
 
     def __unicode__(self):
         return self.name
@@ -37,14 +41,109 @@ class Organization(models.Model):
                    tagline=tagline, start_date=start_date, description=description, website=website)
         return org
 
-class OrganizationImage(models.Model):
 
-    org = models.ForeignKey(Organization, related_name='images')
-    image = models.ImageField(upload_to='organization')
+class Post(models.Model):
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    #org = models.ForeignKey(Organization, related_name='posts')
+
+    text = models.TextField(max_length=2000)
+    timestamp = models.DateTimeField()
+    user = models.ForeignKey(User)
+
+    comments = generic.GenericRelation('Post')
+
 
     @classmethod
-    def create(cls, org, image):
-        image_instance = cls(org=org, image=image)
+    def create(cls, user, profile, text):
+       post = cls(user=user, content_object = profile, text=text, timestamp=datetime.datetime.now())
+
+       return post
+
+class PostForm(ModelForm):
+    class Meta:
+        model = Post
+        fields = ['text']
+
+class Image(models.Model):
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = generic.GenericForeignKey('content_type', 'object_id')
+
+    image = models.ImageField(upload_to='images',max_length=500,blank=True,null=True)
+    thumbnail = models.ImageField(upload_to='thumbnails',max_length=500,blank=True,null=True)
+
+    def create_thumbnail(self):
+        # original code for this method came from
+        # http://snipt.net/danfreak/generate-thumbnails-in-django-with-pil/
+
+        # If there is no image associated with this.
+        # do not create thumbnail
+        if not self.image:
+            return
+
+
+        from PIL import Image
+        from cStringIO import StringIO
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        import os
+
+        # Set our max thumbnail size in a tuple (max width, max height)
+        THUMBNAIL_SIZE = (200,200)
+
+        DJANGO_TYPE = self.image.file.content_type
+
+        if DJANGO_TYPE == 'image/jpeg':
+            PIL_TYPE = 'jpeg'
+            FILE_EXTENSION = 'jpg'
+        elif DJANGO_TYPE == 'image/png':
+            PIL_TYPE = 'png'
+            FILE_EXTENSION = 'png'
+
+        # Open original photo which we want to thumbnail using PIL's Image
+        image = Image.open(StringIO(self.image.read()))
+
+        # Convert to RGB if necessary
+        # Thanks to Limodou on DjangoSnippets.org
+        # http://www.djangosnippets.org/snippets/20/
+        #
+        # I commented this part since it messes up my png files
+        #
+        #if image.mode not in ('L', 'RGB'):
+        #    image = image.convert('RGB')
+
+        # We use our PIL Image object to create the thumbnail, which already
+        # has a thumbnail() convenience method that contrains proportions.
+        # Additionally, we use Image.ANTIALIAS to make the image look better.
+        # Without antialiasing the image pattern artifacts may result.
+        image.thumbnail(THUMBNAIL_SIZE, Image.ANTIALIAS)
+
+        # Save the thumbnail
+        temp_handle = StringIO()
+        image.save(temp_handle, PIL_TYPE)
+        temp_handle.seek(0)
+
+        # Save image to a SimpleUploadedFile which can be saved into
+        # ImageField
+        suf = SimpleUploadedFile(os.path.split(self.image.name)[-1],
+        temp_handle.read(), content_type=DJANGO_TYPE)
+        # Save SimpleUploadedFile into image field
+        self.thumbnail.save('%s_thumbnail.%s'%(os.path.splitext(suf.name)[0],FILE_EXTENSION), suf, save=False)
+
+    def save(self):
+        # create a thumbnail
+        self.create_thumbnail()
+
+        super(Image, self).save()
+
+
+    @classmethod
+    def create(cls, attach, image):
+        image_instance = cls(content_object=attach, image=image)
         return image_instance
 
 
@@ -69,7 +168,7 @@ register(['view_org',
 
 #add email, location, communities, region, images
 class Project(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
 
     profile_image = models.ImageField(upload_to="project/profile_image")
 
@@ -92,15 +191,8 @@ class Project(models.Model):
 
     website = models.URLField()
 
-    @classmethod
-    def create(cls, name, sponsor_org, profile_image, short_description, tagline, start_date, end_date,
-               description, website, scale, status):
-        org = cls(name=name, sponsor_org=sponsor_org, profile_image=profile_image, short_description=short_description,
-                   tagline=tagline, start_date=start_date, end_date=end_date, description=description,
-                   website=website, scale=scale, status=status)
-        return org
-
-
+    posts = generic.GenericRelation('Post')
+    images = generic.GenericRelation('Image')
 
     def __unicode__(self):
         return self.name
@@ -108,14 +200,15 @@ class Project(models.Model):
     class Meta:
         ordering =('name',)
 
-class ProjectImage(models.Model):
-    proj = models.ForeignKey(Project, related_name='images')
-    image = models.ImageField(upload_to='project')
-
     @classmethod
-    def create(cls, proj, image):
-        image_instance = cls(proj=proj, image=image)
-        return image_instance
+    def create(cls, name, sponsor_org, profile_image, short_description, tagline, start_date, end_date,
+               description, website, scale, status):
+        proj = cls(name=name, sponsor_org=sponsor_org, profile_image=profile_image, short_description=short_description,
+                   tagline=tagline, start_date=start_date, end_date=end_date, description=description,
+                   website=website, scale=scale, status=status)
+        return proj
+
+
 
 register(['view_proj',
 
@@ -132,15 +225,12 @@ register(['view_proj',
 
 
 
-class OrgImageForm(ModelForm):
+class ImageForm(ModelForm):
     class Meta:
-        model = OrganizationImage
+        model = Image
         fields = ['image']
 
-class ProjectImageForm(ModelForm):
-    class Meta:
-        model = ProjectImage
-        fields = ['image']
+
 
 
 class ProjectForm(ModelForm):
