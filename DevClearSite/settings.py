@@ -64,6 +64,8 @@ WSGI_APPLICATION = 'DevClearSite.wsgi.application'
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
 LOGIN_REDIRECT_URL = '/home/'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 
 TEMPLATE_CONTEXT_PROCESSORS = ('django.contrib.messages.context_processors.messages',
 'django.contrib.auth.context_processors.auth'

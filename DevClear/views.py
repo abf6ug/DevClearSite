@@ -10,7 +10,10 @@ from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User, Group
 from django.forms.models import model_to_dict
 from DevClear.models import Organization,  OrganizationForm,  OrganizationModForm, Post, PostForm, Image,  ImageForm, Project, ProjectForm, ProjectModForm
+import datetime
+from django.contrib.contenttypes.generic import ContentType
 import object_permissions as perm
+
 
 ORG_MEMBER_PERMS = ['add_member', 'join_proj', 'can_post', 'can_comment']
 
@@ -35,6 +38,7 @@ def main(request):
     if(request.user.is_authenticated()):
         return HttpResponseRedirect("/home/")
     return render_to_response('index.html', {}, context_instance=RequestContext(request))
+
 
 def register(request):
     response=''
@@ -64,7 +68,42 @@ def register(request):
 
 @login_required
 def home(request):
-    return render_to_response('home.html', {'all_org': Organization.objects.all()},
+
+    org_feed = []
+    proj_feed =[]
+
+
+    for org in request.user.organization_set.all():
+        for post in org.posts.all():
+            org_feed.append(post)
+
+
+    for proj in request.user.project_set.all():
+        for post in proj.posts.all():
+            proj_feed.append(post)
+
+
+
+
+
+    return render_to_response('home.html', {'org_feed':org_feed, 'proj_feed': proj_feed},
+                              context_instance=RequestContext(request))
+
+@login_required
+def all_org(request):
+    return render_to_response('organizations_list.html', {'list': Organization.objects.all()},
+                              context_instance=RequestContext(request))
+
+@login_required
+def user_org_list(request):
+
+    return render_to_response('organizations_list.html', {'list': request.user.organization_set.all()},
+                              context_instance=RequestContext(request))
+
+@login_required
+def user_proj_list(request):
+
+    return render_to_response('organizations_list.html', {'list': request.user.project_set.all()},
                               context_instance=RequestContext(request))
 
 @login_required
@@ -109,26 +148,29 @@ def create_project(request, org_name=''):
         form = ProjectForm(request.POST, request.FILES)
         if form.is_valid():
             name = form.cleaned_data['name']
-            sponsor_org = org
-            scale = form.cleaned_data['scale']
-            status = form.cleaned_data['status']
-            tagline = form.cleaned_data['tagline']
-            short = form.cleaned_data['short_description']
-            start_date = form.cleaned_data['start_date']
-            end_date = form.cleaned_data['end_date']
-            description = form.cleaned_data['description']
-            website = form.cleaned_data['website']
+            if not Project.objects.filter(name=name):
+                sponsor_org = org
+                scale = form.cleaned_data['scale']
+                status = form.cleaned_data['status']
+                tagline = form.cleaned_data['tagline']
+                short = form.cleaned_data['short_description']
+                start_date = form.cleaned_data['start_date']
+                end_date = form.cleaned_data['end_date']
+                description = form.cleaned_data['description']
+                website = form.cleaned_data['website']
 
-            image = form.cleaned_data['profile_image']
+                image = form.cleaned_data['profile_image']
 
-            project = Project.create(name, sponsor_org, image, short, tagline,
-                                     start_date, end_date, description, website, scale, status)
-            project.save()
-            project.members.add(request.user)
-            request.user.set_perms(PROJ_HIGH_ADMIN_PERMS, project)
+                project = Project.create(name, sponsor_org, image, short, tagline,
+                                         start_date, end_date, description, website, scale, status)
+                project.save()
+                project.members.add(request.user)
+                request.user.set_perms(PROJ_HIGH_ADMIN_PERMS, project)
 
-            profile_url = "/profile/" + sponsor_org.name + '/' + name
-            return HttpResponseRedirect(profile_url)  # Redirect after POST
+                profile_url = "/profile/" + sponsor_org.name + '/' + name
+                return HttpResponseRedirect(profile_url)  # Redirect after POST
+
+
     else:
         form = ProjectForm()  # An unbound form
 
@@ -182,10 +224,16 @@ def view_profile(request, org_name=""):
 
 
 
-    #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), HIGH_ADMIN_PERMS, org)
+    #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), ORG_HIGH_ADMIN_PERMS, org)
     #Organization.objects.get
     if request.method == 'POST':
-        if request.POST.get("type") == "comment":
+        if request.POST.get("type") == "delete_post":
+            post = Post.objects.get(pk=request.POST.get("post_id"))
+            post.delete()
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "comment":
             post_form = PostForm(request.POST)
             if post_form.is_valid():
                 feed_post = Post.objects.get(pk=request.POST.get('feed_post'))
@@ -239,6 +287,8 @@ def view_profile(request, org_name=""):
             user = User.objects.get(username=request.POST.get("user"))
             org.members.remove(user)
             user.revoke_all(org)
+            for proj in org.project_set.all():
+                user.revoke_all(proj)
             profile_url = '/profile/' + org.name + '/'
             return HttpResponseRedirect(profile_url)
             #check permissions in html
@@ -252,6 +302,7 @@ def view_profile(request, org_name=""):
         elif request.POST.get("type") == "make_low_admin":
             user = User.objects.get(username=request.POST.get("user"))
             user.set_perms(ORG_LOW_ADMIN_PERMS, org)
+
             profile_url = '/profile/' + org.name + '/'
             return HttpResponseRedirect(profile_url)
 
@@ -264,6 +315,10 @@ def view_profile(request, org_name=""):
         elif request.POST.get("type") == "downgrade_low_admin":
             user = User.objects.get(username=request.POST.get("user"))
             user.set_perms(ORG_MEMBER_PERMS, org)
+            for proj in org.project_set.all():
+                if user.has_all_perms(proj, PROJ_HIGH_ADMIN_PERMS) or user.has_all_perms(proj, PROJ_LOW_ADMIN_PERMS):
+                    print 'downgrade project perms'
+                    user.set_perms(PROJ_MEMBER_PERMS, proj)
             profile_url = '/profile/' + org.name + '/'
             return HttpResponseRedirect(profile_url)
 
@@ -321,7 +376,6 @@ def view_profile(request, org_name=""):
     high_admin = []
     low_admin = []
     member = []
-
     for user in org.members.all():
         if user.has_object_perm('make_high_admin', org):
             high_admin.append(user)
@@ -351,7 +405,14 @@ def view_project_profile(request, org_name="", proj_name=""):
     post_form = None
 
     if request.method == 'POST':
-        if request.POST.get("type") == "comment":
+
+        if request.POST.get("type") == "delete_post":
+            post = Post.objects.get(pk=request.POST.get("post_id"))
+            post.delete()
+            profile_url = '/profile/' + org.name + '/' + proj.name
+            return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "comment":
             post_form = PostForm(request.POST)
             if post_form.is_valid():
                 feed_post = Post.objects.get(pk=request.POST.get('feed_post'))
