@@ -1,128 +1,150 @@
 {% extends "base.html" %}
-<div class="row" id="content" style="padding-left: 10px">
 
-    {% block left_side_bar %}
+{% block left_side_bar %}
 
 
-        <div class="col-lg-2">
-            <div style="padding-bottom: 10px">
-                <h3><img class="img-circle"
-                                                  src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
-                                                  alt="User Pic"> {{ user.first_name }}</h3>
+    <div class="col-lg-2">
+        <div style="padding-bottom: 10px">
+            <h3><img class="img-circle"
+                     src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50"
+                     alt="User Pic"> {{ user.first_name }}</h3>
+        </div>
+
+        <div class="personal">
+            <div class="list-group">
+                <li  class="list-group-item">
+                    <h4 class="list-group-item-heading">Email</h4>
+                    <p class="list-group-item-text">{{ user.email }}</p>
+                </li>
+                <li class="list-group-item">
+                    <h4 class="list-group-item-heading">Cell Number</h4>
+                    <p class="list-group-item-text">{{ user.username }}</p>
+                </li>
             </div>
+        </div>
 
-            <div class="personal">
-                <div class="list-group">
-                    <li  class="list-group-item">
-                        <h4 class="list-group-item-heading">Email</h4>
-                        <p class="list-group-item-text">{{ user.email }}</p>
-                    </li>
-                    <li class="list-group-item">
-                        <h4 class="list-group-item-heading">Cell Number</h4>
-                        <p class="list-group-item-text">{{ user.username }}</p>
-                    </li>
-                </div>
-            </div>
+        <div class="personal col-lg-12">
 
-            <div class="personal">
-                <h3>Organizations</h3>
-                <div class="list-group">
-                    {% for org in user.organization_set.all|slice:":3" %}
-                        <li class="list-group-item">
-                            <h4 class="list-group-item-heading"><a href="/profile/{{ org.name }}/">{{ org.name }}</a></h4>
-                            <p class="list-group-item-text">{{ org.tagline }}</p>
-                        </li>
-                    {% endfor %}
-                    {% if user.organization_set.all.count|length > 3 %}
-                        <div class="pull-right">
-                            <a href="/home/all_organizations/">Display more projects</a>
-                        </div>
-                    {% endif %}
 
-                </div>
-                <div class="col-lg-12">
+            <div class="col-lg-12">
 
                 <a href="{% url "register_org" %}" class="btn btn-danger" type="button"
                    data-toggle="tooltip"
                    data-original-title="Edit this user">Register Organization</a>
-                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block content %}
+    <div class="col-lg-8">
+        <div class="col-lg-6" >
+            <div class="panel-heading"><h3>Organization Feed</h3></div>
+            <div class="panel-body" style="overflow: auto; max-height: 90%">
+                {% for post in org_feed|slice:":10" reversed%}
+
+
+                    <div class="col-lg-12 well well-sm container">
+
+                        <div class="col-lg-4"><a href="/profile/{{ post.content_object.name }}/#{{ post.id }}">{{ post.content_object.name }}</a>
+                            <img src="{{ MEDIA_URL }}{{ post.content_object.profile_image.url }}" width="100%"/></div>
+
+                        <div class="col-lg-6">
+                            {{ post.text }}<br>
+                            {{ post.user.get_full_name }}<br>
+                            {{ post.timestamp }}
+                        </div>
+                        <div class="col-lg-6">
+                            {{  post.comments.all.count }} comment{{  post.comments.all.count|pluralize }}
+                        </div>
+                    </div>
+                {% empty %}
+                    Sorry, there are no recent updates on any of your projects.
+                {% endfor %}
             </div>
         </div>
 
-    {% endblock %}
+        <div class="col-lg-6">
+            <div class="panel-heading"><h3>Project Feed</h3></div>
+            <div class="panel-body" style="overflow: auto; max-height: 90%">
 
-    {% block content %}
-        <div class="col-lg-8" style="max-height: 85%;overflow: auto">
+                {% for post in proj_feed|slice:":10" reversed%}
 
-            {% for org in all_org %}
-                <div class="col-lg-12 well well-sm container">
 
-                    <div class="col-lg-2" style="text-align: center">
-                        <div>
-                            <h4><a href='/profile/{{ org.name }}/'>{{ org.name }}</a></h4>
+                    <div class="col-lg-12 well well-sm container">
+
+                        <div class="col-lg-4"><a href="/profile/{{ post.content_object.sponsor_org }}/{{ post.content_object.name }}/#{{ post.id }}">{{ post.content_object.name }}</a>
+                            <img src="{{ MEDIA_URL }}{{ post.content_object.profile_image.url }}" width="100%"/></div>
+
+                        <div class="col-lg-6">
+                            {{ post.text }}<br>
+                            {{ post.user.get_full_name }}<br>
+                            {{ post.timestamp }}
                         </div>
-                        <div>
-                            <img src="{{ MEDIA_URL }}{{ org.profile_image.url }}" width = "100%">
-                        </div>
-                    </div>
-                    <div class="col-lg-5">
-
-                        <div class="panel panel-default">
-                            <!-- Default panel contents -->
-                            <div class="panel-heading">Organization Info</div>
-                            <table class="table">
-                                <tr>
-                                    <td>Motto</td>
-                                    <td>{{ org.tagline }}</td>
-                                </tr>
-                                <tr>
-                                    <td>When We Started</td>
-                                    <td>{{ org.start_date }}</td>
-                                </tr>
-                                <tr>
-                                    <td>Organization website</td>
-                                    <td>{{ org.website }}</td>
-                                </tr>
-                            </table>
+                        <div class="col-lg-6">
+                            {{  post.comments.all.count }} comment{{  post.comments.all.count|pluralize }}
                         </div>
                     </div>
-                    <div class="col-lg-5">
-                        <div class="panel panel-default">
+                {% empty %}
+                    Sorry, there are no recent updates on any of your projects.
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
 
-                            <div class="panel-heading">
-                                Description
-                            </div>
-                            {{ org.short_description }}
-                        </div>
-                    </div>
+
+
+{% block right_side_bar %}
+    <div class="col-lg-2">
+        <div class="col-lg-12" style="padding-bottom: 10px">
+            <h3>Organizations</h3>
+
+            <div class="list-group">
+                {% for org in user.organization_set.all|slice:":4" %}
+                    <li class="list-group-item">
+                        <h4 class="list-group-item-heading"><a href="/profile/{{ org.name }}/">{{ org.name }}</a></h4>
+                        <p class="list-group-item-text">{{ org.tagline }}</p>
+                    </li>
+
+                {% endfor %}
+                <li class="list-group-item">
+                    Displaying {{ forloop.counter }} of {{ user.organization_set.all.count }}
+                </li>
+                <div class="pull-right">
+                    <a href="{% url "user_org_list" %}">Display all of your organizations</a>
                 </div>
 
-            {% endfor %}
+            </div>
         </div>
-    {% endblock %}
-
-
-
-    {% block right_side_bar %}
-        <div class="col-lg-2">
-            <h3> Your Projects </h3>
-            <div class="project">
-                <div class="list-group">
-                    {% for proj in  user.project_set.all%}
-                        <li class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                <a href="/profile/{{ proj.sponsor_org.name }}/{{ proj.name }}">
+        <div class="col-lg-12" style="padding-bottom: 20px">
+            <h3>Projects </h3>
+            <div class="list-group">
+                {% for proj in  user.project_set.all%}
+                    <li class="list-group-item">
+                        <h4 class="list-group-item-heading">
+                            <a href="/profile/{{ proj.sponsor_org.name }}/{{ proj.name }}">
                                 {{ proj.name }}</a></h4>
 
-                            <p class="list-group-item-text">
-                                <a href="/profile/{{ proj.sponsor_org.name }}/">
+                        <p class="list-group-item-text">
+                            <a href="/profile/{{ proj.sponsor_org.name }}/">
                                 {{ proj.sponsor_org.name }}</a></p>
-                        </li>
-                    {% endfor %}
+                    </li>
+                {% endfor %}
+                <div class="pull-right" style="padding-bottom: 10px">
+                    <a href="{% url "user_proj_list" %}">Display all of your projects</a>
                 </div>
             </div>
 
         </div>
-    {% endblock %}
-</div><!-- /.row -->
+        <div class="col-lg-12" style="padding-bottom: 10px">
+            <div class="pull-right">
+                <a href="{% url "all_org_list" %}"><button class="btn btn-info">Look through all organizations</button></a>
+            </div>
+        </div>
+
+
+    </div>
+{% endblock %}
 

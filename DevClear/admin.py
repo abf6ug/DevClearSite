@@ -1,5 +1,5 @@
 from django.contrib import admin
-from DevClear.models import Organization, Project, Image
+from DevClear.models import Organization, Project, Image, Post
 
 class OrganizationImageInline(admin.TabularInline):
     model = Image
@@ -10,5 +10,8 @@ class OrganizationImageAdmin(admin.ModelAdmin):
 
 admin.site.register(Organization)
 admin.site.register(Project)
+admin.site.register(Post)
+admin.site.register(Image)
+
 
 

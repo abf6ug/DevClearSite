@@ -22,6 +22,12 @@ urlpatterns = patterns('',
                        url(r'^home/$', 'DevClear.views.home', name='home'),
                        url(r'^home/settings/$', 'DevClear.views.settings', name='settings'),
                        url(r'^home/inbox/$', 'DevClear.views.inbox', name='inbox'),
+                       url(r'^home/organizations_list/$', 'DevClear.views.user_org_list', name='user_org_list'),
+                       url(r'^home/projects_list/$', 'DevClear.views.user_proj_list', name='user_proj_list'),
+
+                       url(r'^home/all_organizations/$', 'DevClear.views.all_org', name='all_org_list'),
+
+
                        url(r'^(?P<org_name>[\w|\W]+)/create_project/$', 'DevClear.views.create_project', name='inbox'),
                        url(r'^home/register_org/$', 'DevClear.views.register_org', name='register_org'),
                        url(r'^profile/(?P<org_name>[\w|\W]+)/(?P<proj_name>[\w|\W]+)/$',

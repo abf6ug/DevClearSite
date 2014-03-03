@@ -6,7 +6,7 @@ import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
-#add email, hq location, region, area of development, images, org landline/main phone, profile image
+#add email, hq location, region, area of development, org landline/main phone
 class Organization(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
@@ -41,6 +41,49 @@ class Organization(models.Model):
                    tagline=tagline, start_date=start_date, description=description, website=website)
         return org
 
+#add email, location, communities, region
+class Project(models.Model):
+    name = models.CharField(max_length=50)
+
+    profile_image = models.ImageField(upload_to="project/profile_image")
+
+    members = models.ManyToManyField(User)
+    sponsor_org = models.ForeignKey(Organization)
+
+
+    scale = models.CharField(max_length=20)
+
+    STATUS_CHOICES=(('NS', 'Not Started'), ('I', 'In Progress'), ('NC','Near Completion'), ('C', 'Completed'))
+    status = models.CharField(max_length=2,
+                                      choices=STATUS_CHOICES,
+                                      default='N')
+    tagline = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date= models.DateField()
+
+    description = models.TextField(max_length=2000)
+    short_description = models.TextField(max_length=300)
+
+    website = models.URLField()
+
+    posts = generic.GenericRelation('Post')
+    images = generic.GenericRelation('Image')
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering =('name',)
+
+    @classmethod
+    def create(cls, name, sponsor_org, profile_image, short_description, tagline, start_date, end_date,
+               description, website, scale, status):
+        proj = cls(name=name, sponsor_org=sponsor_org, profile_image=profile_image, short_description=short_description,
+                   tagline=tagline, start_date=start_date, end_date=end_date, description=description,
+                   website=website, scale=scale, status=status)
+        return proj
+
+
 
 class Post(models.Model):
 
@@ -62,11 +105,6 @@ class Post(models.Model):
        post = cls(user=user, content_object = profile, text=text, timestamp=datetime.datetime.now())
 
        return post
-
-class PostForm(ModelForm):
-    class Meta:
-        model = Post
-        fields = ['text']
 
 class Image(models.Model):
 
@@ -147,6 +185,8 @@ class Image(models.Model):
         return image_instance
 
 
+
+
 register(['view_org',
 
               'add_member', 'join_proj', 'can_post', 'can_comment',
@@ -159,55 +199,6 @@ register(['view_org',
 
 
              ], Organization, app_label='DevClear')
-
-
-
-
-
-
-
-#add email, location, communities, region, images
-class Project(models.Model):
-    name = models.CharField(max_length=50)
-
-    profile_image = models.ImageField(upload_to="project/profile_image")
-
-    members = models.ManyToManyField(User)
-    sponsor_org = models.ForeignKey(Organization)
-
-
-    scale = models.CharField(max_length=20)
-
-    STATUS_CHOICES=(('NS', 'Not Started'), ('I', 'In Progress'), ('NC','Near Completion'), ('C', 'Completed'))
-    status = models.CharField(max_length=2,
-                                      choices=STATUS_CHOICES,
-                                      default='N')
-    tagline = models.CharField(max_length=100)
-    start_date = models.DateField()
-    end_date= models.DateField()
-
-    description = models.TextField(max_length=2000)
-    short_description = models.TextField(max_length=300)
-
-    website = models.URLField()
-
-    posts = generic.GenericRelation('Post')
-    images = generic.GenericRelation('Image')
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        ordering =('name',)
-
-    @classmethod
-    def create(cls, name, sponsor_org, profile_image, short_description, tagline, start_date, end_date,
-               description, website, scale, status):
-        proj = cls(name=name, sponsor_org=sponsor_org, profile_image=profile_image, short_description=short_description,
-                   tagline=tagline, start_date=start_date, end_date=end_date, description=description,
-                   website=website, scale=scale, status=status)
-        return proj
-
 
 
 register(['view_proj',
@@ -225,13 +216,18 @@ register(['view_proj',
 
 
 
+
+
+
 class ImageForm(ModelForm):
     class Meta:
         model = Image
         fields = ['image']
 
-
-
+class PostForm(ModelForm):
+    class Meta:
+        model = Post
+        fields = ['text']
 
 class ProjectForm(ModelForm):
     class Meta:

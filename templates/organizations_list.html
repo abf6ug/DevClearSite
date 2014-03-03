@@ -1,0 +1,53 @@
+{% extends "home.html" %}
+
+{% block content %}
+    <div class="col-lg-8" style="max-height: 85%;overflow: auto">
+
+        {% for profile in list %}
+            <div class="col-lg-12 well well-sm container">
+
+                <div class="col-lg-2" style="text-align: center">
+                    <div>
+                        <h4><a href='/profile/{{ profile.name }}/'>{{ profile.name }}</a></h4>
+                    </div>
+                    <div>
+                        <img src="{{ MEDIA_URL }}{{ profile.profile_image.url }}" width = "100%">
+                    </div>
+                </div>
+                <div class="col-lg-5">
+
+                    <div class="panel panel-default">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading">Organization Info</div>
+                        <table class="table">
+                            <tr>
+                                <td>Motto</td>
+                                <td>{{ profile.tagline }}</td>
+                            </tr>
+                            <tr>
+                                <td>When We Started</td>
+                                <td>{{ profile.start_date }}</td>
+                            </tr>
+                            <tr>
+                                <td>Organization website</td>
+                                <td>{{ profile.website }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="panel panel-default">
+
+                        <div class="panel-heading">
+                            Description
+                        </div>
+                        <p class="panel-body">
+                        {{ profile.short_description }}</p>
+                    </div>
+                </div>
+            </div>
+
+        {% endfor %}
+    </div>
+
+{% endblock %}
