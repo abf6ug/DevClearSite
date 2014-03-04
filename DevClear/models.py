@@ -268,30 +268,4 @@ class OrganizationForm(ModelForm):
         fields = ['name', 'profile_image', 'tagline', 'website', 'start_date', 'short_description', 'description']
         #foreign key community
 
-
-
-class Message(models.Model):
-    #id = models.CharField(max_length=50, unique=True)
-    sender = models.OneToOneField(User)
-    #receivers = models.ManyToManyField(User)
-
-    date = models.DateField()
-    time = models.TimeField()
-
-    received = models.BooleanField()
-    content = models.TextField(max_length=160)
-
-    PLATFORM_CHOICES=(('W', 'Web'), ('S', 'SMS'))
-    platform = models.CharField(max_length=1,
-                                      choices=PLATFORM_CHOICES
-                                      )
-
-
-    def __unicode__(self):
-        return self.id
-
-    class Meta:
-        ordering =('id',)
-
-
 # Create your models here.

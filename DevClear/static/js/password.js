@@ -34,3 +34,23 @@ function passwordmatch(val1,val2)
         return false;
     }
 }
+
+function validateAll(val1, val2, val3)
+{
+    if (!phonenumber(val1)) {
+        console.log("phone number");
+        return phonenumber(val1);
+    }
+    else if (!password(val2)) {
+        console.log("password 1");
+        return password(val2);
+    }
+    else if (!passwordmatch(val3)) {
+        console.log("password2");
+        return passwordmatch(val3);
+    }
+    else {
+        console.log("true");
+        return true;
+    }
+}

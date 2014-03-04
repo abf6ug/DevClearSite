@@ -137,7 +137,7 @@ def settings(request):
 @login_required
 def inbox(request):
 
-    return render_to_response('inbox.html', {}, context_instance=RequestContext(request))
+    return render_to_response('postman/write.html', {}, context_instance=RequestContext(request))
 
 @login_required
 def create_project(request, org_name=''):

@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.views import login, logout, password_change
 from DevClearSite import settings
 from django.conf.urls.static import static
+import postman
 
 admin.autodiscover()
 
@@ -33,10 +34,13 @@ urlpatterns = patterns('',
                        url(r'^profile/(?P<org_name>[\w|\W]+)/(?P<proj_name>[\w|\W]+)/$',
                            'DevClear.views.view_project_profile', name='view_project_profile'),
                        url(r'^profile/(?P<org_name>[\w|\W]+)/$', 'DevClear.views.view_profile', name='view_profile'),
-                       #url(r'^messages/', include('postman.urls')),
+                       url(r'^messages/', include('postman.urls')),
+
 
 
 )
 
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#urlpatterns += ('postman.urls')
+
