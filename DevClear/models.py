@@ -66,6 +66,8 @@ class Project(models.Model):
 
     website = models.URLField()
 
+    communities = models.ManyToManyField('Community')
+
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
 
@@ -83,6 +85,40 @@ class Project(models.Model):
                    website=website, scale=scale, status=status)
         return proj
 
+class Community(models.Model):
+
+    name  = models.CharField(max_length=50)
+    profile_image = models.ImageField(upload_to="community/profile_image")
+    tagline  = models.CharField(max_length=200)
+
+
+    members = models.ManyToManyField(User, related_name='community_members')
+
+    region = models.CharField(max_length=50)#county? city? locale? coordinates?
+    country = models.CharField(max_length=50)
+
+    comm_lead = models.ForeignKey(User)
+
+    posts = generic.GenericRelation('Post')
+    images = generic.GenericRelation('Image')
+
+    #needPost
+
+
+    description = models.TextField(max_length=2000)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering =('name',)
+
+    @classmethod
+    def create(cls, name, profile_image, tagline,
+               region, country, description, comm_lead):
+        comm = cls(name=name, profile_image=profile_image, tagline=tagline,
+                   region=region, country=country, description=description, comm_lead=comm_lead)
+        return comm
 
 
 class Post(models.Model):
@@ -215,7 +251,13 @@ register(['view_proj',
          ], Project, app_label='DevClear')
 
 
+register(['can_post', 'can_comment',
 
+              'add_member', 'edit_comm', 'remove_member', 'post_as_comm', 'comment_as_comm',  'upload_image', 'delete_image',
+              'delete_comment', 'delete_post', 'swap_admin', 'remove_comm'#?
+
+
+             ], Community, app_label='DevClear')
 
 
 
@@ -268,4 +310,22 @@ class OrganizationForm(ModelForm):
         fields = ['name', 'profile_image', 'tagline', 'website', 'start_date', 'short_description', 'description']
         #foreign key community
 
+class CommunityForm(ModelForm):
+
+    class Meta:
+        model = Community
+        fields = ['name', 'profile_image', 'tagline', 'region', 'country','description']
+        #foreign key community
+
+
+class CommunityModForm(ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(CommunityModForm, self).__init__(*args, **kwargs)
+
+        for key in self.fields:
+            self.fields[key].required = False
+
+    class Meta:
+        model = Community
+        fields = ['name', 'profile_image', 'tagline', 'region', 'country', 'description']
 # Create your models here.
