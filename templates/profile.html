@@ -125,9 +125,7 @@
                                         <input type="hidden" name="type" value="delete_post"/>
                                         <input type="hidden" name="post_id" value="{{ post.pk }}">
                                         {% csrf_token %}
-                                        <button type="submit" class="pull-right" style="outline: none; border: 0; color: #A80000; background-color: #f5f5f5">
-                                                                <span class="glyphicon glyphicon-remove"></span>
-                                                            </button>
+                                        <button type="submit" class="close" aria-hidden="true">&times;</button>
                                     </form>
                                 {% endif %}
                             </div>
@@ -156,9 +154,7 @@
                                                             <input type="hidden" name="type" value="delete_post"/>
                                                             <input type="hidden" name="post_id" value="{{ comment.pk }}">
                                                             {% csrf_token %}
-                                                            <button type="submit" class="pull-right" style="outline: none; border: 0; color: #A80000; background-color: #f5f5f5">
-                                                                <span class="glyphicon glyphicon-remove"></span>
-                                                            </button>
+                                                            <button type="submit" class="close" aria-hidden="true">&times;</button>
 
 
                                                         </form>

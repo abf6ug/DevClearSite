@@ -82,73 +82,106 @@
             {% if can_post %}
 
                 <div class="col-lg-12 well well-sm">
-                    <form method="post" name="post_form">
-                        <input type="hidden" name="type" value="post"/>
-                        {% render_field post_form.text class="input-sm" style="width: 80%" rows="3"%}
-                        {%  csrf_token %}
-                        <button type="submit" class="btn btn-primary pull-right">Post</button>
-                    </form>
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                        </div>
+                        <div class="col-lg-10">
+                            <form method="post" name="post_form">
+                                <input type="hidden" name="type" value="post"/>
+                                {% render_field post_form.text class="input-sm" style="width: 80%" rows="3"%}
+                                {%  csrf_token %}
+                                <button type="submit" class="btn btn-primary pull-right">Post</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             {% endif %}
             <div id="posts" class="col-lg-12 container" style="overflow:auto; max-height: 75%">
 
                 {% for post in proj.posts.all reversed %}
                     <div class="col-lg-12 well well-sm" id="{{ post.id }}">
-                        {% has_perm user 'delete_post' proj as delete_post%}
-                        {% if delete_post %}
-                            <form method="post" name="delete_post">
-                                <input type="hidden" name="type" value="delete_post"/>
-                                <input type="hidden" name="post_id" value="{{ post.pk }}">
-                                {% csrf_token %}
-                                <input type="submit" class="text pull-right" value="&times;"/>
+                        <div class="row">
+                            <div class="col-lg-2">
+                                <!-- change image to org/user who made the post! -->
+                                <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                            </div>
+                            <div class="col-lg-9">
 
-                            </form>
+                                <strong>{{ proj.name }} </strong><br>
+                                <p style="margin-bottom: 2px">{{ post.text }}</p>
+                                <p style="font-size:75%">{{ post.timestamp }}</p>
 
-                        {% endif %}
 
 
-                        {{ post.text }}<br>
-                        {{ post.user.get_full_name }}<br>
-                        {{ post.timestamp }}
 
-                        {% has_perm user 'can_comment' proj as can_comment %}
+
+                            </div>
+                            <div class="col-lg-1">
+                                {% has_perm user 'delete_post' proj as delete_post%}
+                                {% if delete_post %}
+                                    <form method="post" name="delete_post">
+                                        <input type="hidden" name="type" value="delete_post"/>
+                                        <input type="hidden" name="post_id" value="{{ post.pk }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="close" aria-hidden="true">&times;</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                        <div id="comments" class="col-lg-12">
+                            {%for comment in post.comments.all reversed %}
+                                <div id="comment" class="well well-sm" style="margin-bottom: 10px">
+                                            <div class="row">
+                                                <div class="col-lg-2">
+                                                    <!-- change image to org/user who made the post! -->
+                                                    <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                                                </div>
+                                                <div class="col-lg-9">
+                                                    <strong style="font-size: 90%">{{ comment.user.get_full_name }}</strong><br>
+                                                    <p style="margin-bottom: 2px; font-size: 90%">{{ comment.text }}</p>
+                                                    <p style="font-size:70%; margin-bottom:0">{{ comment.timestamp }}</p>
+
+                                                </div>
+                                                <div class="col-lg-1">
+                                                    {% has_perm user 'delete_comment' proj as delete_comment%}
+                                                    {% if delete_comment%}
+
+                                                        <form method="post" name="delete_post">
+                                                            <input type="hidden" name="type" value="delete_post"/>
+                                                            <input type="hidden" name="post_id" value="{{ comment.pk }}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="close" aria-hidden="true">&times;</button>
+
+
+                                                        </form>
+
+                                                    {% endif %}
+
+
+                                                </div>
+                                            </div>
+                                        </div>
+                            {% endfor %}
+                        </div>
+
+                     {% has_perm user 'can_comment' proj as can_comment %}
                         {% if can_comment %}
-                            <div class="col-lg-12" >
+                            <div class="col-lg-12">
 
                                 <form method="post">
                                     <input type="hidden" name="type" value="comment"/>
                                     <input type="hidden" name="feed_post" value="{{ post.pk }}"/>
 
-                                    {% render_field post_form.text class="input-sm" style="width: 70%" rows="2"%}
+                                    {% render_field post_form.text class="input-sm" style="width: 70%" rows="1"%}
                                     {%  csrf_token %}
-                                    <button type="submit" class="btn btn-primary pull-right">Comment</button>
+                                    <button type="submit" class="btn btn-primary pull-right" style="margin-bottom: 0">Comment</button>
                                 </form>
                             </div>
                         {% endif %}
 
-
-                        <div id="comments" class="col-lg-12">
-                            {%for comment in post.comments.all reversed %}
-                                <div id="comment" class="well well-sm">
-                                    {% has_perm user 'delete_comment' proj as delete_comment%}
-                                    {% if delete_comment%}
-
-                                        <form method="post" name="delete_post">
-                                            <input type="hidden" name="type" value="delete_post"/>
-                                            <input type="hidden" name="post_id" value="{{ comment.pk }}">
-                                            {% csrf_token %}
-                                            <input type="submit" class="text pull-right" value="&times;"/>
-
-                                        </form>
-
-                                    {% endif %}
-                                    {{ comment.text }}<br>
-                                    {{ comment.user.get_full_name }}<br>
-                                    {{ comment.timestamp }}<br>
-
-                                </div>
-                            {% endfor %}
-                        </div>
                     </div>
                 {% endfor %}
             </div>
