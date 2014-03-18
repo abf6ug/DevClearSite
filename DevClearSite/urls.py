@@ -31,12 +31,20 @@ urlpatterns = patterns('',
 
                        url(r'^(?P<org_name>[\w|\W]+)/create_project/$', 'DevClear.views.create_project', name='inbox'),
                        url(r'^home/register_org/$', 'DevClear.views.register_org', name='register_org'),
+
+                    #url(r'^profile/(?P<org_name>[\w|\W]+)/feed/$', 'DevClear.views.profile_feed', name='view_profile_feed'),
+
+
                        url(r'^profile/(?P<org_name>[\w|\W]+)/(?P<proj_name>[\w|\W]+)/$',
                            'DevClear.views.view_project_profile', name='view_project_profile'),
                        url(r'^profile/(?P<org_name>[\w|\W]+)/$', 'DevClear.views.view_profile', name='view_profile'),
                        url(r'^messages/', include('postman.urls')),
 
 
+
+                       url(r'^community/(?P<comm_name>[\w|\W]+)/$', 'DevClear.views.view_community_profile', name='view_community_profile'),
+
+                       url(r'^home/register_community/$', 'DevClear.views.register_community', name='register_community'),
 
 )
 

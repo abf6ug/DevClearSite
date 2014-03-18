@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User, Group
 from django.forms.models import model_to_dict
-from DevClear.models import Organization,  OrganizationForm,  OrganizationModForm, Post, PostForm, Image,  ImageForm, Project, ProjectForm, ProjectModForm
+from DevClear.models import Organization,  OrganizationForm,  OrganizationModForm, Post, PostForm, Image,  ImageForm, \
+    Project, ProjectForm, ProjectModForm, Community, CommunityForm, CommunityModForm
 import datetime
 from django.contrib.contenttypes.generic import ContentType
 import object_permissions as perm
@@ -31,6 +32,10 @@ PROJ_LOW_ADMIN_PERMS = PROJ_MEMBER_PERMS + ['edit_proj', 'downgrade_low_admin', 
 
 PROJ_HIGH_ADMIN_PERMS = PROJ_LOW_ADMIN_PERMS + ['remove_proj',  'downgrade_high_admin', 'make_high_admin', 'remove_high_admin']
 
+COMM_MEMBER_PERMS = ['can_post', 'can_comment']
+
+COMM_LEAD_PERMS = COMM_MEMBER_PERMS + ['add_member', 'edit_comm', 'remove_member', 'post_as_comm', 'comment_as_comm',  'upload_image', 'delete_image',
+              'delete_comment', 'delete_post', 'swap_admin', 'remove_comm']
 
 
 
@@ -212,6 +217,83 @@ def register_org(request):
         form = OrganizationForm()
 
     return render_to_response('register_org.html', {'form': form}, context_instance=RequestContext(request))
+
+def register_community(request):
+    if request.method == 'POST':
+
+        form = CommunityForm(request.POST, request.FILES)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            tagline = form.cleaned_data['tagline']
+            region = form.cleaned_data['region']
+            country = form.cleaned_data['country']
+
+            description = form.cleaned_data['description']
+
+
+            image = form.cleaned_data['profile_image']
+
+            community = Community.create(name, image, tagline, region, country, description, request.user)
+            community.save()
+            community.members.add(request.user)
+
+
+
+
+            request.user.set_perms(COMM_LEAD_PERMS, community)
+
+            profile_url = '/community/' + name + '/'
+
+            return HttpResponseRedirect(profile_url)#go to profile page normally
+
+    else:
+        form = CommunityForm()
+
+    return render_to_response('register_comm.html', {'form': form}, context_instance=RequestContext(request))
+
+#unused
+@login_required
+def profile_feed(request, org_name=""):
+    org = Organization.objects.get(name=org_name)
+    response = ''
+
+    post_form = None
+
+
+    if request.method == 'POST':
+        if request.POST.get("type") == "delete_post":
+            post = Post.objects.get(pk=request.POST.get("post_id"))
+            post.delete()
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "comment":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                feed_post = Post.objects.get(pk=request.POST.get('feed_post'))
+                post = Post.create(request.user, feed_post, request.POST.get('text'))
+                post.save()
+                profile_url = '/profile/' + org.name + '/'
+                return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "post":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                post = Post.create(request.user, org, request.POST.get('text'))
+                post.save()
+            profile_url = '/profile/' + org.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+    else:
+        post_form= PostForm()
+
+
+    return render_to_response('profile_feed.html', {'org': org,
+
+                                               'response': response,
+                                               'post_form':post_form,
+                                               },
+                              context_instance=RequestContext(request))
 
 @login_required
 def view_profile(request, org_name=""):
@@ -574,3 +656,149 @@ def view_project_profile(request, org_name="", proj_name=""):
                                                         'high_admin': high_admin,
                                                        'low_admin': low_admin,
                                                        'members':member}, context_instance=RequestContext(request))
+
+def view_community_profile(request, comm_name=""):
+    comm = Community.objects.get(name=comm_name)
+    response = ''
+
+    image_form =None
+    mod_form = None
+    post_form = None
+
+
+
+    #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), ORG_HIGH_ADMIN_PERMS, org)
+    #Organization.objects.get
+    if request.method == 'POST':
+        if request.POST.get("type") == "delete_post":
+            post = Post.objects.get(pk=request.POST.get("post_id"))
+            post.delete()
+            profile_url = '/community/' + comm.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "comment":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                feed_post = Post.objects.get(pk=request.POST.get('feed_post'))
+                post = Post.create(request.user, feed_post, request.POST.get('text'))
+                post.save()
+                profile_url = '/community/' + comm.name + '/'
+                return HttpResponseRedirect(profile_url)
+
+            else:
+                fields_dict = model_to_dict(comm)
+                mod_form = CommunityModForm(fields_dict)
+                image_form = ImageForm()
+
+        elif request.POST.get("type") == "post":
+            post_form = PostForm(request.POST)
+            if post_form.is_valid():
+                post = Post.create(request.user, comm, request.POST.get('text'))
+                post.save()
+            profile_url = '/community/' + comm.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+
+        elif request.POST.get("type") == "add_user":
+            comm.members.add(request.user)
+            request.user.set_perms(COMM_MEMBER_PERMS, comm)
+            profile_url = '/community/' + comm.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "upload_image":
+            image_form = ImageForm(request.POST, request.FILES)
+            if image_form.is_valid():
+                image_file = request.FILES['image']
+                image = Image.create(comm, image_file)
+                image.save()
+                profile_url = '/community/' + comm.name + '/'
+                return HttpResponseRedirect(profile_url)
+            else:
+                fields_dict = model_to_dict(comm)
+                mod_form = CommunityModForm(fields_dict)
+                post_form = PostForm()
+
+        elif request.POST.get("type") == "remove_image":
+            image = Image.objects.get(pk=request.POST.get("image"))
+            image.image.delete(save=True)
+            image.delete()
+
+            profile_url = '/community/' + comm.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+        elif request.POST.get("type") == "remove":
+            user = User.objects.get(username=request.POST.get("user"))
+            comm.members.remove(user)
+            user.revoke_all(comm)
+
+            profile_url = '/community/' + comm.name + '/'
+            return HttpResponseRedirect(profile_url)
+            #check permissions in html
+
+        elif request.POST.get("type") == "swap_admin":
+            user = User.objects.get(username=request.POST.get("user"))
+            user.set_perms(COMM_LEAD_PERMS, comm)
+            profile_url = '/community/' + comm.name + '/'
+            return HttpResponseRedirect(profile_url)
+
+
+        elif request.POST.get("type") == "remove_comm":
+            comm.delete()
+            return HttpResponseRedirect('/home/')
+
+        elif request.POST.get("type") == "change_pref":
+            mod_form = CommunityModForm(request.POST, request.FILES)
+
+            if mod_form.is_valid():
+                new_name = mod_form.cleaned_data['name']
+                new_tagline = mod_form.cleaned_data['tagline']
+                new_region = mod_form.cleaned_data['region']
+                new_country = mod_form.cleaned_data['country']
+                new_description = mod_form.cleaned_data['description']
+
+                new_image = mod_form.cleaned_data['profile_image']
+
+                if not new_name == comm.name:
+                    if not Community.objects.filter(name=new_name).count():
+                        comm.name = new_name
+                if not new_tagline == comm.tagline:
+                    comm.tagline = new_tagline
+                if not new_region == comm.region :
+                    comm.region = new_region
+                if not new_country == comm.country:
+                    comm.country = new_country
+                if not new_description == comm.description:
+                    comm.description = new_description
+
+                if new_image is not None:
+                    comm.profile_image.delete()
+                    comm.profile_image = new_image
+
+                comm.save()
+
+                profile_url = '/community/' + comm.name + '/'
+                return HttpResponseRedirect(profile_url)
+            else:
+                image_form = ImageForm()
+                post_form = PostForm()
+
+
+    else:
+        fields_dict = model_to_dict(comm)
+        mod_form = CommunityModForm(fields_dict)
+        image_form = ImageForm()
+        post_form = PostForm()
+
+
+
+
+    return render_to_response('community_profile.html', {'comm': comm,
+
+                                               'response': response,
+                                               'image_form':image_form,
+                                               'mod_form': mod_form,
+                                               'post_form':post_form,
+                                               'comm_lead': comm.comm_lead,
+
+                                               'members': comm.members.all()},
+                              context_instance=RequestContext(request))

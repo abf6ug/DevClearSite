@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+{% load organization_tags %}
+{% load community_tags %}
+{%  load widget_tweaks %}
+
+
+{% block left_side_bar %}
+
+    <div class="col-lg-2 well well-sm" style="height: 90%">
+        <div style="padding-bottom: 10px">
+            <img class="img" src="{{ MEDIA_URL }}{{ comm.profile_image.url }}" width="100%">
+        </div>
+
+        <div style="padding-bottom: 10px"><h3>{{ comm.name }}</h3></div>
+
+        <div class="personal" style="padding-bottom: 10px">
+            <div class="list-group">
+                <div class="list-group-item">
+                    <h4 class="list-group-item-heading">{{ comm.tagline }}</h4>
+
+                    <p class="list-group-item-text"></p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="list-group">
+            <div class="list-group-item">
+                <h4>Community Leader</h4>
+            </div>
+            <div class="list-group-item">
+                {{ comm.comm_lead }}
+            </div>
+        </div>
+        {% has_perm user 'can_post' comm as member%}
+        {% if not member%}
+            <div class="list-group">
+                <div class="list-group-item">
+                    Want to be a member of {{ comm.name }}?
+                </div>
+                <div class="list-group-item">
+                    <form method="post" name="add_user">
+                        <input type="hidden" name="type" value="add_user"/>
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-block">Click to join! <span
+                                class="glyphicon glyphicon-plus"></span></button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+
+
+    </div>
+
+{% endblock %}
+{% block content %}
+    <div class="col-lg-8" style="height: 90%">
+
+    <div>
+    <!-- May have to activate javascript, look at bootstrap docs if problem-->
+    <ul id="profile" class="nav nav-pills" style="padding-bottom: 10px">
+        <li class="active"><a href="#feed" data-toggle="tab">Feed</a></li>
+        <li><a href="#images" data-toggle="tab">Images</a></li>
+        <li><a href="#projects" data-toggle="tab">Projects</a></li>
+        <li><a href="#members" data-toggle="tab">Members</a></li>
+
+        {% has_perm user 'edit_comm' comm as edit_comm %}
+        {% if edit_comm %}
+            <li><a href="#pref" data-toggle="tab">Preferences</a></li>
+        {% endif %}
+
+    </ul>
+
+    <div id="profileTabContent" class="tab-content" style="height: 100%">
+
+
+
+    <div class="tab-pane fade active in" id="feed" data-spy="scroll" data-target=".posts">
+
+        <div class="col-lg-6 posts">
+
+            {% has_perm user 'can_post' comm as can_post %}
+            {% if can_post %}
+
+                <div class="col-lg-12 well well-sm">
+                    <form method="post" name="post_form">
+                        <input type="hidden" name="type" value="post"/>
+                        {% render_field post_form.text class="input-sm" style="width: 80%" rows="3"%}
+                        {%  csrf_token %}
+                        <button type="submit" class="btn btn-primary pull-right">Post</button>
+                    </form>
+                </div>
+            {% endif %}
+            <div id="posts" class="col-lg-12 container" style="overflow:auto; max-height: 75%">
+
+                {% for post in comm.posts.all reversed %}
+                    <div class="col-lg-12 well well-sm" id="{{ post.id }}">
+                        {% has_perm user 'delete_post' comm as delete_post%}
+                        {% if delete_post %}
+                            <form method="post" name="delete_post">
+                                <input type="hidden" name="type" value="delete_post"/>
+                                <input type="hidden" name="post_id" value="{{ post.pk }}">
+                                {% csrf_token %}
+                                <input type="submit" class="text pull-right" value="&times;"/>
+
+                            </form>
+
+                        {% endif %}
+
+
+                        {{ post.text }}<br>
+                        {{ post.user.get_full_name }}<br>
+                        {{ post.timestamp }}
+
+                        {% has_perm user 'can_comment' comm as can_comment %}
+                        {% if can_comment %}
+                            <div class="col-lg-12">
+
+                                <form method="post">
+                                    <input type="hidden" name="type" value="comment"/>
+                                    <input type="hidden" name="feed_post" value="{{ post.pk }}"/>
+
+                                    {% render_field post_form.text class="input-sm" style="width: 70%" rows="2"%}
+                                    {%  csrf_token %}
+                                    <button type="submit" class="btn btn-primary pull-right">Comment</button>
+                                </form>
+                            </div>
+                        {% endif %}
+
+
+                        <div id="comments" class="col-lg-12">
+                            {%for comment in post.comments.all reversed %}
+                                <div id="comment" class="well well-sm">
+                                    {% has_perm user 'delete_comment' comm as delete_comment%}
+                                    {% if delete_comment%}
+
+                                        <form method="post" name="delete_post">
+                                            <input type="hidden" name="type" value="delete_post"/>
+                                            <input type="hidden" name="post_id" value="{{ comment.pk }}">
+                                            {% csrf_token %}
+                                            <input type="submit" class="text pull-right" value="&times;"/>
+
+                                        </form>
+
+                                    {% endif %}
+                                    {{ comment.text }}<br>
+                                    {{ comment.user.get_full_name }}<br>
+                                    {{ comment.timestamp }}<br>
+
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+        </div>
+        <div class="col-lg-6">
+            <div class="col-lg-12">
+
+                <div class="panel panel-default">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">{{ comm.name }}</div>
+
+                    <!-- Table -->
+                    <table class="table">
+                        <tr>
+                            <td>Location</td>
+                            <td>{{ comm.region }}, {{ comm.country }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>Who we are</td>
+                            <td><p>{{ comm.description }}</p></td>
+                        </tr>
+
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+    <div class="tab-pane fade" id="images">
+
+        <div class="col-lg-12 container">
+
+            {% has_perm user 'upload_image' comm as upload_image%}
+            {% if upload_image %}
+                <div class="col-lg-5 well" style="padding-bottom: 10px">
+                    <form method="post" name="image_upload" enctype="multipart/form-data">
+                        <input type="hidden" name="type" value="upload_image" >
+                        {{ image_form }}
+                        {% csrf_token %}
+                        <input type="submit" class="btn btn-primary" value="Upload Image!">
+                    </form>
+                </div>
+            {% endif %}
+
+
+        </div>
+        <div class="col-lg-12" style="overflow:auto; max-height: 65%">
+
+            {% for entry in comm.images.all %}
+                <div class="col-lg-3 well well-sm" style="padding-bottom: 10px">
+                    <a href="{{ MEDIA_URL }}{{ entry.image.url }}"><img src="{{ MEDIA_URL }}{{ entry.thumbnail.url }}" width="100%"/></a>
+                    {% has_perm user 'delete_image' comm as remove_image%}
+                    {% if remove_image %}
+                        <div class="col-lg-12" style="padding-top: 10px">
+                            <form method="post" name="remove_image">
+                                <input type="hidden" name="type" value="remove_image"/>
+                                <input type="hidden" name="image" value="{{ entry.pk }}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-block">Delete Image?</button>
+
+                            </form>
+                        </div>
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+    <div class="tab-pane fade" id="projects">
+        {% for proj in comm.project_set.all %}
+            <div class="col-lg-12 well well-sm container">
+
+                <div class="col-lg-2" style="text-align: center">
+                    <div>
+                        <h4><a href="/profile/{{ comm.name }}/{{ proj.name }}/">{{ proj.name }}</a></h4>
+                    </div>
+                    <div>
+                        <img src="{{ MEDIA_URL }}{{ comm.profile_image.url }}" width = "100%">
+                    </div>
+                </div>
+                <div class="col-lg-5">
+
+                    <div class="panel panel-default">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading">Project Info</div>
+                        <table class="table">
+                            <tr>
+                                <td>Motto</td>
+                                <td>{{ proj.tagline }}</td>
+                            </tr>
+                            <tr>
+                                <td>When We Started</td>
+                                <td>{{ proj.start_date }}</td>
+                            </tr>
+
+                            <tr>
+                                <td>Status</td>
+                                <td>{{ proj.get_status_display }}</td>
+                            </tr>
+                            <tr>
+                                <td>Project website</td>
+                                <td>{{ proj.website }}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div>
+                <div class="col-lg-5">
+                    <div class="panel panel-default">
+
+                        <div class="panel-heading">
+                            Description
+                        </div>
+                        <div class="panel-body">
+                            {{ proj.short_description }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-lg-8">
+                <h4>This community does not have any projects associated with it at this time.  See what they need!</h4>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="tab-pane fade" id="members">
+        <div class="col-lg-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">Members</div>
+                <table class="table">
+                    <tr>
+                        <th>Member name</th>
+                    </tr>
+                    {% for member in members %}
+                        <tr>
+                            <td>{{ member.get_full_name }}</td>
+
+                        </tr>
+
+                        {% empty %}<!-- Doesn't work because members isn't actually empty, we just filter results.  Look at generating admin and regular member list in view-->
+                        <tr><td colspan="3">Sorry, there are no registered community members.</tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+    {% has_perm user 'edit_comm' comm as edit_comm%}
+    {% if edit_comm %}
+    <div class="tab-pane fade" id="pref">
+
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">Community Info</div>
+                <!-- Table -->
+                <table class="table table-responsive">
+                    <form method="post" name="change_pref" enctype="multipart/form-data" onsubmit="return confirm('Are you sure you want to save these changes?');">
+                        <input type="hidden" name="type" value="change_pref"/>
+                        <table class="table">
+                            {% for field in mod_form %}
+                            {% ifnotequal field.label "Description" %}
+
+
+                                    <div class="fieldWrapper">
+                                        <tr>
+
+                                            <td><b>{{ field.label }}</b></td>
+
+                                            <td>
+
+                                                    {% render_field field class+="input-sm" style+="width: 100%" %}
+
+                                            </td>
+                                            {% if field.errors %}
+                                                <td>{{ field.errors }}
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    </div>
+
+                            {% endifnotequal %}
+                        {% endfor %}</table>
+                        {% csrf_token %}
+
+
+                </table>
+
+
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">Tell us about your community!</div>
+                <table class="table">
+                    <tr>
+                        <td>
+                            {% render_field mod_form.description class+="input-sm" style+="width: 100%" rows="8" placeholder="Please tell us about your community!"%}
+                        </td>
+                    </tr>
+                    {% if mod_form.description.errors%}
+                        <tr>
+                            <td>{{ mod_form.description.errors }}
+                            </td>
+                        </tr>
+                    {% endif %}
+
+
+                </table>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="panel">
+                {% csrf_token %}
+                <button class="btn-lg btn-block btn-success" type="submit">Save Changes!</button>
+                </form>
+            </div>
+        </div>
+
+        {% has_perm user 'remove_comm' comm as remove_comm%}
+        {% if remove_comm%}
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Remove your community from HiComm?</div>
+
+                    <form method="post" name="remove_comm" onsubmit="return confirm('Are you sure you want to remove your community?');">
+                        <input type="hidden" name="type" value="remove_comm"/>
+                        {% csrf_token %}
+                        <br>
+                        <div class="wrapper" style="text-align: center">
+                            <button type="submit" class="btn btn-danger" style="width: 80%">Remove {{ comm.name }}</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <div class="modal" id="{{ member.pk }}" tabindex="-1" role="form" aria-labelledby="loginModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Remove user from organization?</h4>
+                </div>
+                <div class="modal-body">
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn  btn-danger">Remove</button>
+                    <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+{% endblock %}
+
+
+{% block right_side_bar %}
+    <div class="col-lg-2">
+        <h3> {{ org.name }} Projects </h3>
+        <div class="project">
+            <div class="list-group">
+                {% for proj in  org.project_set.all%}
+                    <li class="list-group-item">
+                        <h4 class="list-group-item-heading">
+                            <a href="/profile/{{ proj.sponsor_org.name }}/{{ proj.name }}">
+                                {{ proj.name }}</a></h4>
+
+                        <p class="list-group-item-text">
+                            <a href="/profile/{{ proj.sponsor_org.name }}/">
+                                {{ proj.sponsor_org.name }}</a></p>
+                    </li>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+
+{% endblock %}
+
+<script type="text/javascript">
+    $(document).on("click", ".open-removeModal", function (e) {
+
+        e.preventDefault();
+
+        var _self = $(this);
+
+        var user = _self.data('id');
+        $("#user").val(user);
+        console.log('aahgerh');
+        $(_self.attr('href')).modal('show');
+    });
+
+</script>
+
+
