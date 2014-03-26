@@ -128,6 +128,7 @@
         </div>
         <div class="col-lg-6">
             {% csrf_token %}
+            <input type="hidden" name="sponsor_org" value="{{ org }}">
             <button class="btn-lg btn-block btn-success" type="submit">Create!</button>
             </form>
         </div>

@@ -8,6 +8,9 @@
 
 {% block left_side_bar %}
 
+    {% has_perm user 'make_high_admin' proj as check_high_admin %}
+    {% has_perm user 'make_low_admin' proj as check_low_admin %}
+
     <div class="col-lg-2 well well-sm" style="height: 90%">
         <div style="padding-bottom: 10px">
             <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%" >
@@ -17,7 +20,7 @@
 
         <div class="panel" style="padding-bottom: 10px">
             <h4>A project sponsored by
-                <a href="/profile/{{ proj.sponsor_org.name }}">{{ proj.sponsor_org.name }}</a></h4>
+                <a href="/organization/{{ proj.sponsor_org.name }}">{{ proj.sponsor_org.name }}</a></h4>
 
         </div>
 
@@ -40,9 +43,28 @@
         {% else %}
             <div>
                 <h4> Welcome back {{ user.first_name }}! </h4>
+                {% if check_high_admin%}
+                    You are an admin for {{ proj.name }}
+                {% else %}
+                    {% if check_low_admin %}
+                        You are a moderator for {{ proj.name }}
+                    {% else %}
+                        You are a member of {{ proj.name }}
+                    {% endif %}
+                {% endif %}
 
 
             </div>
+
+        {% endif %}
+
+        {% if check_high_admin %}
+            <div class = "col-lg-12">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#linkModal">Link to a community?</button>
+
+            </div>
+
+
 
         {% endif %}
     </div>
@@ -206,9 +228,6 @@
 
 
     </div>
-
-
-
     <div class="tab-pane fade" id="images">
         <div class="col-lg-12 container">
 
@@ -255,7 +274,6 @@
         </div>
 
     </div>
-
     <div class="tab-pane fade" id="members">
         <div class="col-lg-4">
             <div class="panel panel-default">
@@ -523,7 +541,6 @@
                 </table>
             </div>
         </div>
-
         <div class="col-lg-6">
             <div class="panel panel-default">
                 <div class="panel-heading">What is your project? In detail...</div>
@@ -543,17 +560,15 @@
 
                 </table>
             </div>
-        </div>
 
-        <div class="col-lg-6">
+
             <div class="panel">
                 {% csrf_token %}
                 <button class="btn-lg btn-block btn-success" type="submit" >Save Changes!</button>
                 </form>
             </div>
-        </div>
 
-        <div class="col-lg-6">
+
             <div class="panel panel-default">
                 <div class="panel-heading">Remove your project?</div>
 
@@ -596,5 +611,31 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+
+
+    <div class="modal" id="linkModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Link community</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form action = "" method="post">
+                                {% render_field link_form.communities style+="width: 100%" %}
+
+                        </div>
+
+                        <div class="modal-footer">
+                            {% csrf_token %}
+                            <input type="hidden" name="type" value="link">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Link</button>
+                            </form>
+
+                        </div>
+                    </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+            </div><!-- /.modal -->
 {% endblock %}
 

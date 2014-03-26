@@ -23,7 +23,21 @@
             </div>
         </div>
         {% has_perm user 'add_member' org as member%}
-        {% if not member%}
+        {% if  member%}
+            <div class="col-lg-12" style="padding-bottom: 20px">
+
+                <h4>Welcome back {{ user.first_name }}</h4>
+                {% if check_high_admin%}
+                       You are an admin for {{ org.name }}
+                {% else %}
+                    {% if check_low_admin %}
+                        You are a moderator for {{ org.name }}
+                    {% else %}
+                        You are a member of {{ org.name }}
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% else %}
             <div class="list-group">
                 <div class="list-group-item">
                     Want to be a member of {{ org.name }}?
@@ -37,13 +51,13 @@
                     </form>
                 </div>
             </div>
+
         {% endif %}
 
         {% has_perm user 'create_proj' org as create_proj%}
         {% if create_proj%}
-            <div>
-
-                <a href="/{{ org.name }}/create_project/" class="btn btn-danger" type="button"
+            <div class="col-lg-12">
+                <a href="/organization/{{ org.name }}/create_project/" class="btn btn-danger btn-block" type="button"
                    data-toggle="tooltip"
                    data-original-title="Edit this user">Create New Project?</a>
 
@@ -253,7 +267,7 @@
 
                 <div class="col-lg-2" style="text-align: center">
                     <div>
-                        <h4><a href="/profile/{{ org.name }}/{{ proj.name }}/">{{ proj.name }}</a></h4>
+                        <h4><a href="/project/{{ proj.name }}/">{{ proj.name }}</a></h4>
                     </div>
                     <div>
                         <img src="{{ MEDIA_URL }}{{ org.profile_image.url }}" width = "100%">
@@ -646,13 +660,13 @@
             <div class="list-group">
                 {% for proj in  org.project_set.all%}
                     <li class="list-group-item">
+
                         <h4 class="list-group-item-heading">
-                            <a href="/profile/{{ proj.sponsor_org.name }}/{{ proj.name }}">
+                            <img src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="25%">
+                            <a href="/project/{{ proj.name }}">
                                 {{ proj.name }}</a></h4>
 
-                        <p class="list-group-item-text">
-                            <a href="/profile/{{ proj.sponsor_org.name }}/">
-                                {{ proj.sponsor_org.name }}</a></p>
+
                     </li>
                 {% endfor %}
             </div>

@@ -329,3 +329,8 @@ class CommunityModForm(ModelForm):
         model = Community
         fields = ['name', 'profile_image', 'tagline', 'region', 'country', 'description']
 # Create your models here.
+
+class ProjCommLinkForm(ModelForm):
+    class Meta:
+        model = Project
+        fields = ['communities']

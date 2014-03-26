@@ -24,25 +24,26 @@ urlpatterns = patterns('',
                        url(r'^home/inbox/$', 'DevClear.views.inbox', name='inbox'),
                        url(r'^home/organizations_list/$', 'DevClear.views.user_org_list', name='user_org_list'),
                        url(r'^home/projects_list/$', 'DevClear.views.user_proj_list', name='user_proj_list'),
-
                        url(r'^home/all_organizations/$', 'DevClear.views.all_org', name='all_org_list'),
-
-
-                       url(r'^(?P<org_name>[\w|\W]+)/create_project/$', 'DevClear.views.create_project', name='inbox'),
+                       url(r'^home/all_communities/$', 'DevClear.views.all_comm', name='all_comm_list'),
+                       url(r'^home/register_community/$', 'DevClear.views.register_community', name='register_community'),
                        url(r'^home/register_org/$', 'DevClear.views.register_org', name='register_org'),
+
+
+                       url(r'^organization/(?P<org_name>[\w|\W]+)/create_project/$', 'DevClear.views.create_project', name='inbox'),
+                       url(r'^organization/(?P<org_name>[\w|\W]+)/$', 'DevClear.views.view_profile', name='view_profile'),
+
 
                     #url(r'^profile/(?P<org_name>[\w|\W]+)/feed/$', 'DevClear.views.profile_feed', name='view_profile_feed'),
 
 
-                       url(r'^profile/(?P<org_name>[\w|\W]+)/(?P<proj_name>[\w|\W]+)/$',
+                       url(r'^project/(?P<proj_name>[\w|\W]+)/$',
                            'DevClear.views.view_project_profile', name='view_project_profile'),
 
-                       url(r'^profile/(?P<org_name>[\w|\W]+)/$', 'DevClear.views.view_profile', name='view_profile'),
 
 
                        url(r'^community/(?P<comm_name>[\w|\W]+)/$', 'DevClear.views.view_community_profile', name='view_community_profile'),
 
-                       url(r'^home/register_community/$', 'DevClear.views.register_community', name='register_community'),
 
 )
 
