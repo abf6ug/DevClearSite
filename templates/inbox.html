@@ -1,14 +1,328 @@
-{% extends "home.html" %}
+{% extends "base.html" %}
+{% load organization_tags %}
+{% load project_tags %}
+{% load widget_tweaks %}
 
-{%  block content %}
-  <div class="well well-sm col-lg-8">
-<button onclick="phonenumber('8045144263')">Click me</button>
-<form method="post" action="/inbox/" name='password'> {% csrf_token %}
-        <h4>Change password</h4>
-        <table>{{change_password_form.as_table}}</table>
-        <p>{{password_message}}</p>
-        <p><input type="submit" value="Save Changes" name="change_password"/></p>
-</form>
-<p id="demo"></p>
-  </div>
-{% endblock content %}
+{% block left_side_bar %}
+
+
+    <div class="col-lg-3">
+    <h3>Inboxes</h3>
+
+
+    <!-- May have to activate javascript, look at bootstrap docs if problem-->
+    <ul id="profile" class="nav nav-pills" style="padding-bottom: 10px">
+        <li class="active"><a href="#Laura" data-toggle="tab">Laura</a></li>
+
+        <li><a href="#Org1" data-toggle="tab">Org1</a></li>
+        <li><a href="#Org2" data-toggle="tab">Org2</a></li>
+
+    </ul>
+
+
+
+    <div id="InboxTabContent" class="tab-content" style="max-height: 100%;overflow: auto">
+        <div class="tab-pane fade active in" id="Laura" data-spy="scroll" data-target=".posts">
+            <div class="col-lg-12" style="padding-bottom: 20px">
+            <h3>Laura's Inbox </h3>
+                <div class="col-lg-12 list-group">
+                <a href="#1" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+                    <a href="#2" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+                    <a href="#3" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+                    <a href="#4" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="Org1">
+            <div class="col-lg-12" style="padding-bottom: 20px">
+            <h3>Org1's Inbox </h3>
+                <div class="col-lg-12 list-group">
+                <ul class="nav nav-tabs nav-stacked">
+                <a href="#1" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+                    <a href="#2" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+                    <a href="#3" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+                    <a href="#4" class="list-group-item">
+                <li class="" style="list-style-type: none;">
+                        <div class="row">
+                            <div class="col-lg-2" >
+                                <img class="img" src="http://placehold.it/50x50" width="100%">
+                            </div>
+                            <div class="col-lg-10">
+                                <p style="margin-bottom: 0"><strong>John Doe</strong><small class="pull-right">4:43 pm</small></p>
+                                <p>New message from John Doe!</p>
+                            </div>
+                        </div>
+                    </li></a>
+                </ul>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="tab-pane fade" id="Org2">
+            <div class="col-lg-12" style="padding-bottom: 20px">
+            <h3>Org2's Inbox </h3>
+
+
+
+
+
+            </div>
+        </div>
+
+    </div>
+   </div>
+{% endblock %}
+
+{% block content %}
+
+    <div id="InboxTabContent" class="tab-content col-lg-8" style="max-height: 100%;overflow: auto">
+        <div><h3 style="text-align: center">John Doe</h3></div>
+        <div class="tab-pane fade active in" id="1" data-spy="scroll" data-target=".posts">
+
+            <div class="container col-lg-12" id="messages">
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoria skdhfo iuweroij asdl;kfj o aiweur ahsd fkl haoeijr alw kehr oai sdjfa jsdo iah sdf;asndf;oiqw her ;oiajsd ;lfk hasdjk chaowi eru aiw elhr;akl sdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-10">
+                        <strong class="pull-right">Laura Morgan</strong><br>
+                        <p class="pull-right" style="margin-bottom: 2px;text-align: right">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p class="pull-right" style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+                    </div>
+                    <div class="col-lg-1">
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-10">
+                        <strong class="pull-right">Laura Morgan</strong><br>
+                        <p class="pull-right" style="margin-bottom: 2px;text-align: right">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p class="pull-right" style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+                    </div>
+                    <div class="col-lg-1">
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-10">
+                        <strong class="pull-right">Laura Morgan</strong><br>
+                        <p class="pull-right" style="margin-bottom: 2px;text-align: right">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p class="pull-right" style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+                    </div>
+                    <div class="col-lg-1">
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+                <div id="message" class="row">
+                    <div class="col-lg-1">
+                        <!-- change image to org/user who made the post! -->
+                        <img class="img" src=http://placehold.it/260x180" width="100%">
+                    </div>
+
+                    <div class="col-lg-10">
+                        <strong>John Doe</strong><br>
+                        <p style="margin-bottom: 2px;">This is a message!!! It is long!! pweoriaskdhfoiuweroijasdl;kfj oaiweurahsdfklhaoeijralwkehroaisdjfa jsdoiahsdf;asndf;oiqwher;oiajsd ;lfkhasdjkchaowieru aiwelhr;aklsdf</p>
+                        <p style="font-size:75%; margin-bottom:20px">Feb. 22</p>
+
+                    </div>
+                </div>
+
+        </div>
+
+            <div class="col-lg-12 well well-sm">
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <img class="img" src="" width="100%">
+                        </div>
+                        <div class="col-lg-9">
+                            <form method="message" name="message_form">
+                                <input type="hidden" name="type" value="message"/>
+                                {% render_field message_form.text class="input-sm" style="width: 80%" rows="3"%}
+                                {%  csrf_token %}
+                                <button type="submit" class="btn btn-primary pull-right">Post New Message</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+        <div class="tab-pane fade" id="2">
+            Tab 1 content
+        </div>
+        <div class="tab-pane fade" id="3">
+            Tab 2 content
+        </div>
+        <div class="tab-pane fade" id="4">
+            Tab 3 content
+        </div>
+    </div>
+
+
+{% endblock %}

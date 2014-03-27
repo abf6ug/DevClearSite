@@ -29,11 +29,28 @@
                 <h4>Community Leader</h4>
             </div>
             <div class="list-group-item">
-                {{ comm.comm_lead }}
+                {{ comm.comm_lead.get_full_name }}
             </div>
         </div>
         {% has_perm user 'can_post' comm as member%}
-        {% if not member%}
+        {% if member%}
+
+            <div class="list-group">
+                <div class="list-group-item">
+                    No longer a member of {{ comm.name }}?
+                </div>
+                <div class="list-group-item">
+                    <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to leave {{ comm.name }}?');">
+                        <input type="hidden" name="user" value="{{ user }}"/>
+                        <input type="hidden" name="type" value="remove"/>
+
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-block">Click to leave</button>
+                    </form>
+                </div>
+            </div>
+
+        {% else %}
             <div class="list-group">
                 <div class="list-group-item">
                     Want to be a member of {{ comm.name }}?
@@ -47,6 +64,8 @@
                     </form>
                 </div>
             </div>
+
+
         {% endif %}
 
 
@@ -152,6 +171,9 @@
                             {% endfor %}
                         </div>
                     </div>
+                {% empty %}
+                    <div class="col-lg-12 well well-sm">
+                        <h3>{{ comm.name }} has no posts yet! </h3></div>
                 {% endfor %}
             </div>
 
@@ -221,6 +243,9 @@
                     {% endif %}
 
                 </div>
+            {% empty %}
+                <div class="col-lg-6 well well-sm">
+                    <h3>{{ proj.name }}  has no images yet! </h3></div>
 
             {% endfor %}
 
@@ -233,7 +258,7 @@
 
                 <div class="col-lg-2" style="text-align: center">
                     <div>
-                        <h4><a href="/profile/{{ comm.name }}/{{ proj.name }}/">{{ proj.name }}</a></h4>
+                        <h4><a href="{{ proj.profile_url }}">{{ proj.name }}</a></h4>
                     </div>
                     <div>
                         <img src="{{ MEDIA_URL }}{{ comm.profile_image.url }}" width = "100%">
@@ -307,99 +332,99 @@
     </div>
     {% has_perm user 'edit_comm' comm as edit_comm%}
     {% if edit_comm %}
-    <div class="tab-pane fade" id="pref">
+        <div class="tab-pane fade" id="pref">
 
 
-        <div class="col-lg-6">
-            <div class="panel panel-default">
-                <!-- Default panel contents -->
-                <div class="panel-heading">Community Info</div>
-                <!-- Table -->
-                <table class="table table-responsive">
-                    <form method="post" name="change_pref" enctype="multipart/form-data" onsubmit="return confirm('Are you sure you want to save these changes?');">
-                        <input type="hidden" name="type" value="change_pref"/>
-                        <table class="table">
-                            {% for field in mod_form %}
-                            {% ifnotequal field.label "Description" %}
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">Community Info</div>
+                    <!-- Table -->
+                    <table class="table table-responsive">
+                        <form method="post" name="change_pref" enctype="multipart/form-data" onsubmit="return confirm('Are you sure you want to save these changes?');">
+                            <input type="hidden" name="type" value="change_pref"/>
+                            <table class="table">
+                                {% for field in mod_form %}
+                                    {% ifnotequal field.label "Description" %}
 
 
-                                    <div class="fieldWrapper">
-                                        <tr>
+                                        <div class="fieldWrapper">
+                                            <tr>
 
-                                            <td><b>{{ field.label }}</b></td>
+                                                <td><b>{{ field.label }}</b></td>
 
-                                            <td>
+                                                <td>
 
                                                     {% render_field field class+="input-sm" style+="width: 100%" %}
 
-                                            </td>
-                                            {% if field.errors %}
-                                                <td>{{ field.errors }}
                                                 </td>
-                                            {% endif %}
-                                        </tr>
-                                    </div>
+                                                {% if field.errors %}
+                                                    <td>{{ field.errors }}
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        </div>
 
-                            {% endifnotequal %}
-                        {% endfor %}</table>
-                        {% csrf_token %}
-
-
-                </table>
-
-
-            </div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">Tell us about your community!</div>
-                <table class="table">
-                    <tr>
-                        <td>
-                            {% render_field mod_form.description class+="input-sm" style+="width: 100%" rows="8" placeholder="Please tell us about your community!"%}
-                        </td>
-                    </tr>
-                    {% if mod_form.description.errors%}
-                        <tr>
-                            <td>{{ mod_form.description.errors }}
-                            </td>
-                        </tr>
-                    {% endif %}
+                                    {% endifnotequal %}
+                                {% endfor %}</table>
+                            {% csrf_token %}
 
 
-                </table>
-            </div>
-        </div>
+                    </table>
 
-        <div class="col-lg-6">
-            <div class="panel">
-                {% csrf_token %}
-                <button class="btn-lg btn-block btn-success" type="submit">Save Changes!</button>
-                </form>
-            </div>
-        </div>
-
-        {% has_perm user 'remove_comm' comm as remove_comm%}
-        {% if remove_comm%}
-            <div class="col-lg-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">Remove your community from HiComm?</div>
-
-                    <form method="post" name="remove_comm" onsubmit="return confirm('Are you sure you want to remove your community?');">
-                        <input type="hidden" name="type" value="remove_comm"/>
-                        {% csrf_token %}
-                        <br>
-                        <div class="wrapper" style="text-align: center">
-                            <button type="submit" class="btn btn-danger" style="width: 80%">Remove {{ comm.name }}</button>
-                        </div>
-                    </form>
 
                 </div>
             </div>
-        {% endif %}
-    </div>
-{% endif %}
+
+            <div class="col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Tell us about your community!</div>
+                    <table class="table">
+                        <tr>
+                            <td>
+                                {% render_field mod_form.description class+="input-sm" style+="width: 100%" rows="8" placeholder="Please tell us about your community!"%}
+                            </td>
+                        </tr>
+                        {% if mod_form.description.errors%}
+                            <tr>
+                                <td>{{ mod_form.description.errors }}
+                                </td>
+                            </tr>
+                        {% endif %}
+
+
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="panel">
+                    {% csrf_token %}
+                    <button class="btn-lg btn-block btn-success" type="submit">Save Changes!</button>
+                    </form>
+                </div>
+            </div>
+
+            {% has_perm user 'remove_comm' comm as remove_comm%}
+            {% if remove_comm%}
+                <div class="col-lg-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Remove your community from HiComm?</div>
+
+                        <form method="post" name="remove_comm" onsubmit="return confirm('Are you sure you want to remove your community?');">
+                            <input type="hidden" name="type" value="remove_comm"/>
+                            {% csrf_token %}
+                            <br>
+                            <div class="wrapper" style="text-align: center">
+                                <button type="submit" class="btn btn-danger" style="width: 80%">Remove {{ comm.name }}</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
     </div>
     </div>
     </div>
@@ -436,11 +461,11 @@
                 {% for proj in  org.project_set.all%}
                     <li class="list-group-item">
                         <h4 class="list-group-item-heading">
-                            <a href="/profile/{{ proj.sponsor_org.name }}/{{ proj.name }}">
+                            <a href={{proj.profile_url}}>
                                 {{ proj.name }}</a></h4>
 
                         <p class="list-group-item-text">
-                            <a href="/profile/{{ proj.sponsor_org.name }}/">
+                            <a href={{proj.sponsor_org.profile_url}}>
                                 {{ proj.sponsor_org.name }}</a></p>
                     </li>
                 {% endfor %}

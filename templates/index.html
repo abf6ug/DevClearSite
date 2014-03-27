@@ -73,10 +73,10 @@
                             <div class="modal-body">
                                 <form action="{% url "register" %}" class="form-signin" method="post" accept-charset="utf-8" name = "register">
 
-                                    <input class="form-control" type="text" placeholder="cellphone number" name="username" onchange=phonenumber(username.value) required>
+                                    <input class="form-control has-error" type="text" placeholder="cellphone number" name="username" id="username" onchange="phonenumber(this.value)" data-toggle="popover" data-placement="right" data-content="Invalid phone number" required>
 
-                                    <input class="form-control" type="password" placeholder="pin" name="password1" required>
-                                    <input class="form-control" type="password" placeholder="pin" name="password2" required>
+                                    <input class="form-control" type="password" placeholder="pin" name="password1" id="password1" onchange="password(this.value)" data-toggle="popover" data-placement="right" data-content="Invalid pin. Must be 4 digits" required>
+                                    <input class="form-control" type="password" placeholder="pin" name="password2" id="password2" onchange="passwordmatch(this.value,password1.value)" data-toggle="popover" data-placement="right" data-content="Pins do not match" required>
 
                                     <input class="form-control" type="text" placeholder="First Name" name="fn" required>
                                     <input class="form-control" type="text" placeholder="Last Name" name="ln" required>

@@ -27,6 +27,8 @@ class Organization(models.Model):
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
 
+    profile_url = models.CharField(max_length=70)
+
 
     def __unicode__(self):
         return self.name
@@ -36,9 +38,9 @@ class Organization(models.Model):
 
 
     @classmethod
-    def create(cls, name, profile_image, short_description, tagline, start_date, description, website):
+    def create(cls, name, profile_image, short_description, tagline, start_date, description, website, profile_url):
         org = cls(name=name, profile_image=profile_image, short_description=short_description,
-                   tagline=tagline, start_date=start_date, description=description, website=website)
+                   tagline=tagline, start_date=start_date, description=description, website=website, profile_url=profile_url)
         return org
 
 #add email, location, communities, region
@@ -71,6 +73,9 @@ class Project(models.Model):
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
 
+    profile_url = models.CharField(max_length=70)
+
+
     def __unicode__(self):
         return self.name
 
@@ -79,10 +84,10 @@ class Project(models.Model):
 
     @classmethod
     def create(cls, name, sponsor_org, profile_image, short_description, tagline, start_date, end_date,
-               description, website, scale, status):
+               description, website, scale, status, profile_url):
         proj = cls(name=name, sponsor_org=sponsor_org, profile_image=profile_image, short_description=short_description,
                    tagline=tagline, start_date=start_date, end_date=end_date, description=description,
-                   website=website, scale=scale, status=status)
+                   website=website, scale=scale, status=status, profile_url=profile_url)
         return proj
 
 class Community(models.Model):
@@ -104,6 +109,8 @@ class Community(models.Model):
 
     #needPost
 
+    profile_url = models.CharField(max_length=70)
+
 
     description = models.TextField(max_length=2000)
 
@@ -115,9 +122,9 @@ class Community(models.Model):
 
     @classmethod
     def create(cls, name, profile_image, tagline,
-               region, country, description, comm_lead):
+               region, country, description, comm_lead, profile_url):
         comm = cls(name=name, profile_image=profile_image, tagline=tagline,
-                   region=region, country=country, description=description, comm_lead=comm_lead)
+                   region=region, country=country, description=description, comm_lead=comm_lead, profile_url=profile_url)
         return comm
 
 

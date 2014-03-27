@@ -20,12 +20,42 @@
 
         <div class="panel" style="padding-bottom: 10px">
             <h4>A project sponsored by
-                <a href="/organization/{{ proj.sponsor_org.name }}">{{ proj.sponsor_org.name }}</a></h4>
+                <a href={{proj.sponsor_org.profile_url}}>{{ proj.sponsor_org.name }}</a></h4>
 
         </div>
 
         {% has_perm user 'add_member' proj as member%}
-        {% if not member%}
+        {% if  member%}
+
+            <div style="padding-bottom: 10px">
+                <h4> Welcome back {{ user.first_name }}! </h4>
+                {% if check_high_admin%}
+                    You are an admin for {{ proj.name }}
+                {% else %}
+                    {% if check_low_admin %}
+                        You are a moderator for {{ proj.name }}
+                    {% else %}
+                        You are a member of {{ proj.name }}
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="list-group">
+                <div class="list-group-item">
+                    No longer a member of {{ proj.name }}?
+                </div>
+                <div class="list-group-item">
+                    <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to leave {{ org.name }}?');">
+                        <input type="hidden" name="user" value="{{ user }}"/>
+                        <input type="hidden" name="type" value="remove"/>
+
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-block">Click to leave!</button>
+                    </form>
+                </div>
+            </div>
+
+        {% else %}
+
             <div class="list-group">
                 <li class="list-group-item">
                     Want to be a member of {{ proj.name }}?
@@ -40,21 +70,7 @@
                 </li>
 
             </div>
-        {% else %}
-            <div>
-                <h4> Welcome back {{ user.first_name }}! </h4>
-                {% if check_high_admin%}
-                    You are an admin for {{ proj.name }}
-                {% else %}
-                    {% if check_low_admin %}
-                        You are a moderator for {{ proj.name }}
-                    {% else %}
-                        You are a member of {{ proj.name }}
-                    {% endif %}
-                {% endif %}
 
-
-            </div>
 
         {% endif %}
 
@@ -76,7 +92,7 @@
 {% block content %}
     {% has_perm user 'make_high_admin' proj as check_high_admin %}
     {% has_perm user 'make_low_admin' proj as check_low_admin %}
-    <div class="col-lg-10" style="height: 85%">
+    <div class="col-lg-8" style="height: 85%">
 
     <div>
     <!-- May have to activate javascript, look at bootstrap docs if problem-->
@@ -104,74 +120,111 @@
             {% if can_post %}
 
                 <div class="col-lg-12 well well-sm">
-                    <form method="post" name="post_form">
-                        <input type="hidden" name="type" value="post"/>
-                        {% render_field post_form.text class="input-sm" style="width: 80%" rows="3"%}
-                        {%  csrf_token %}
-                        <button type="submit" class="btn btn-primary pull-right">Post</button>
-                    </form>
+                    <div class="row">
+                        <div class="col-lg-2">
+                            <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                        </div>
+                        <div class="col-lg-10">
+                            <form method="post" name="post_form">
+                                <input type="hidden" name="type" value="post"/>
+                                {% render_field post_form.text class="input-sm" style="width: 80%" rows="3"%}
+                                {%  csrf_token %}
+                                <button type="submit" class="btn btn-primary pull-right">Post</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             {% endif %}
             <div id="posts" class="col-lg-12 container" style="overflow:auto; max-height: 75%">
 
                 {% for post in proj.posts.all reversed %}
                     <div class="col-lg-12 well well-sm" id="{{ post.id }}">
-                        {% has_perm user 'delete_post' proj as delete_post%}
-                        {% if delete_post %}
-                            <form method="post" name="delete_post">
-                                <input type="hidden" name="type" value="delete_post"/>
-                                <input type="hidden" name="post_id" value="{{ post.pk }}">
-                                {% csrf_token %}
-                                <input type="submit" class="text pull-right" value="&times;"/>
+                        <div class="row">
+                            <div class="col-lg-2">
+                                <!-- change image to org/user who made the post! -->
+                                <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                            </div>
+                            <div class="col-lg-9">
 
-                            </form>
+                                <strong>{{ proj.name }} </strong><br>
+                                <p style="margin-bottom: 2px">{{ post.text }}</p>
+                                <p style="font-size:75%">{{ post.timestamp }}</p>
 
-                        {% endif %}
 
 
-                        {{ post.text }}<br>
-                        {{ post.user.get_full_name }}<br>
-                        {{ post.timestamp }}
+
+
+                            </div>
+                            <div class="col-lg-1">
+                                {% has_perm user 'delete_post' proj as delete_post%}
+                                {% if delete_post %}
+                                    <form method="post" name="delete_post">
+                                        <input type="hidden" name="type" value="delete_post"/>
+                                        <input type="hidden" name="post_id" value="{{ post.pk }}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="close" aria-hidden="true">&times;</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                        <div id="comments" class="col-lg-12">
+                            {%for comment in post.comments.all reversed %}
+                                <div id="comment" class="well well-sm" style="margin-bottom: 10px">
+                                    <div class="row">
+                                        <div class="col-lg-2">
+                                            <!-- change image to org/user who made the post! -->
+                                            <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                                        </div>
+                                        <div class="col-lg-9">
+                                            <strong style="font-size: 90%">{{ comment.user.get_full_name }}</strong><br>
+                                            <p style="margin-bottom: 2px; font-size: 90%">{{ comment.text }}</p>
+                                            <p style="font-size:70%; margin-bottom:0">{{ comment.timestamp }}</p>
+
+                                        </div>
+                                        <div class="col-lg-1">
+                                            {% has_perm user 'delete_comment' proj as delete_comment%}
+                                            {% if delete_comment%}
+
+                                                <form method="post" name="delete_post">
+                                                    <input type="hidden" name="type" value="delete_post"/>
+                                                    <input type="hidden" name="post_id" value="{{ comment.pk }}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="close" aria-hidden="true">&times;</button>
+
+
+                                                </form>
+
+                                            {% endif %}
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
 
                         {% has_perm user 'can_comment' proj as can_comment %}
                         {% if can_comment %}
-                            <div class="col-lg-12" >
+                            <div class="col-lg-12">
 
                                 <form method="post">
                                     <input type="hidden" name="type" value="comment"/>
                                     <input type="hidden" name="feed_post" value="{{ post.pk }}"/>
 
-                                    {% render_field post_form.text class="input-sm" style="width: 70%" rows="2"%}
+                                    {% render_field post_form.text class="input-sm" style="width: 70%" rows="1"%}
                                     {%  csrf_token %}
-                                    <button type="submit" class="btn btn-primary pull-right">Comment</button>
+                                    <button type="submit" class="btn btn-primary pull-right" style="margin-bottom: 0">Comment</button>
                                 </form>
                             </div>
                         {% endif %}
 
-
-                        <div id="comments" class="col-lg-12">
-                            {%for comment in post.comments.all reversed %}
-                                <div id="comment" class="well well-sm">
-                                    {% has_perm user 'delete_comment' proj as delete_comment%}
-                                    {% if delete_comment%}
-
-                                        <form method="post" name="delete_post">
-                                            <input type="hidden" name="type" value="delete_post"/>
-                                            <input type="hidden" name="post_id" value="{{ comment.pk }}">
-                                            {% csrf_token %}
-                                            <input type="submit" class="text pull-right" value="&times;"/>
-
-                                        </form>
-
-                                    {% endif %}
-                                    {{ comment.text }}<br>
-                                    {{ comment.user.get_full_name }}<br>
-                                    {{ comment.timestamp }}<br>
-
-                                </div>
-                            {% endfor %}
-                        </div>
                     </div>
+
+                 {% empty %}
+                    <div class="col-lg-12 well well-sm">
+                    <h3>{{ proj.name }}  has no posts yet! </h3></div>
                 {% endfor %}
             </div>
 
@@ -268,6 +321,9 @@
                     {% endif %}
 
                 </div>
+                {% empty %}
+                    <div class="col-lg-6 well well-sm">
+                    <h3>{{ proj.name }}  has no images yet! </h3></div>
 
             {% endfor %}
 
@@ -614,28 +670,51 @@
 
 
     <div class="modal" id="linkModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title">Link community</h4>
-                        </div>
-                        <div class="modal-body">
-                            <form action = "" method="post">
-                                {% render_field link_form.communities style+="width: 100%" %}
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Link community</h4>
+                </div>
+                <div class="modal-body">
+                    <form action = "" method="post">
+                        {% render_field link_form.communities style+="width: 100%" %}
 
-                        </div>
+                </div>
 
-                        <div class="modal-footer">
-                            {% csrf_token %}
-                            <input type="hidden" name="type" value="link">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Link</button>
-                            </form>
+                <div class="modal-footer">
+                    {% csrf_token %}
+                    <input type="hidden" name="type" value="link">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Link</button>
+                    </form>
 
-                        </div>
-                    </div><!-- /.modal-content -->
-                </div><!-- /.modal-dialog -->
-            </div><!-- /.modal -->
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 {% endblock %}
 
+{% block right_side_bar %}
+    <div class="col-lg-2">
+        <h3> {{ org.name }} Linked Communities </h3>
+        <div class="project">
+            <div class="list-group">
+                {% for proj in  org.project_set.all%}
+                    <li class="list-group-item">
+                        <h4 class="list-group-item-heading">
+                            <a href={{proj.profile_url}}>
+                                {{ proj.name }}</a></h4>
+
+                        <p class="list-group-item-text">
+                            <a href={{proj.sponsor_org.profile_url}}>
+                                {{ proj.sponsor_org.name }}</a></p>
+                    </li>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+
+{% endblock %}

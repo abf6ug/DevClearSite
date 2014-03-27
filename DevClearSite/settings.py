@@ -43,7 +43,7 @@ INSTALLED_APPS = (
     'crispy_forms',
     'south',
     'object_permissions',
-    'widget_tweaks'
+    'widget_tweaks',
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
@@ -58,6 +58,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 ROOT_URLCONF = 'DevClearSite.urls'
+#ROOT_URLCONF = 'postman.urls'
 
 WSGI_APPLICATION = 'DevClearSite.wsgi.application'
 
