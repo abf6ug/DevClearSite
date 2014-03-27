@@ -9,7 +9,7 @@ from django.conf.urls.static import static
 admin.autodiscover()
 
 
-#comment
+
 
 urlpatterns = patterns('',
                        url(r'^$', 'DevClear.views.main', name='main'),
