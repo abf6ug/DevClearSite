@@ -11,3 +11,6 @@ register = template.Library()
 def has_perm(user, perm, org):
     return perm in get_user_perms(user, org)
 
+@register.simple_tag()
+def list(user, perm, org):
+    return perm in get_user_perms(user, org)

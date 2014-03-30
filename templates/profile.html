@@ -72,6 +72,45 @@
                 </div>
             </div>
 
+            {% if not member%}
+                <div class="list-group">
+                    <div class="list-group-item">
+                        Want to message {{ org.name }}?
+                    </div>
+                    <div class="list-group-item">
+
+                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#messageModal">
+                                <span class ="glyphicon glyphicon-pencil"></span></button>
+
+                    </div>
+                </div>
+
+
+                <div class="modal" id="messageModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="myModalLabel">Message to {{ org }}</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form method="post" name="message_form">
+                                    <input type="hidden" name="type" value="message"/>
+                                    {% render_field message_form.text class="input-sm" style="width: 80%" rows="3"%}
+                                    {%  csrf_token %}
+
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary pull-right">Send</button>
+                                <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+                                </form>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+            {% endif %}
+
         {% endif %}
 
 
@@ -103,6 +142,8 @@
 
 
     <div class="tab-pane fade active in" id="feed" data-spy="scroll" data-target=".posts">
+
+
         <div class="row">
             <div class="col-lg-6 posts">
 
@@ -688,26 +729,7 @@
     </div>
     </div>
 
-    <div class="modal" id="{{ member.pk }}" tabindex="-1" role="form" aria-labelledby="loginModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">Remove user from organization?</h4>
-                </div>
-                <div class="modal-body">
 
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn  btn-danger">Remove</button>
-                    <button type="button" class="btn" data-dismiss="modal">Cancel</button>
-
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
 {% endblock %}
 
 

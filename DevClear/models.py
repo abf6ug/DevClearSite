@@ -26,6 +26,7 @@ class Organization(models.Model):
 
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
+    conversations = generic.GenericRelation('Conversation')
 
     profile_url = models.CharField(max_length=70)
 
@@ -72,6 +73,8 @@ class Project(models.Model):
 
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
+    conversations = generic.GenericRelation('Conversation')
+
 
     profile_url = models.CharField(max_length=70)
 
@@ -106,6 +109,8 @@ class Community(models.Model):
 
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
+    conversations = generic.GenericRelation('Conversation')
+
 
     #needPost
 
@@ -127,14 +132,42 @@ class Community(models.Model):
                    region=region, country=country, description=description, comm_lead=comm_lead, profile_url=profile_url)
         return comm
 
+class Message(models.Model):
+    text = models.TextField(max_length=2000)
+    timestamp = models.DateTimeField()
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    receiver = generic.GenericForeignKey('content_type', 'object_id')
+
+    sender = models.ForeignKey(User)
+    conversation = models.ForeignKey('Conversation')
+
+    @classmethod
+    def create(cls, sender, profile, text, conversation):
+           message = cls(sender=sender, text=text, receiver=profile, timestamp=datetime.datetime.now(), conversation=conversation)
+
+           return message
+
+class Conversation(models.Model):
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    receiver = generic.GenericForeignKey('content_type', 'object_id')
+    #message_set to access messages
+    user = models.ForeignKey(User)
+
+
+    @classmethod
+    def create(cls, user, profile):
+           conversation = cls(user=user, receiver=profile)
+           return conversation
 
 class Post(models.Model):
 
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')
-
-    #org = models.ForeignKey(Organization, related_name='posts')
 
     text = models.TextField(max_length=2000)
     timestamp = models.DateTimeField()
@@ -276,6 +309,11 @@ class ImageForm(ModelForm):
 class PostForm(ModelForm):
     class Meta:
         model = Post
+        fields = ['text']
+
+class MessageForm(ModelForm):
+    class Meta:
+        model = Message
         fields = ['text']
 
 class ProjectForm(ModelForm):
