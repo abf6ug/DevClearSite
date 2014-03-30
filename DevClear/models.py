@@ -136,8 +136,8 @@ class Message(models.Model):
     text = models.TextField(max_length=2000)
     timestamp = models.DateTimeField()
 
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, default=ContentType.objects.get(app_label="DevClear", model="organization"))
+    object_id = models.PositiveIntegerField(default=1)
     receiver = generic.GenericForeignKey('content_type', 'object_id')
 
     sender = models.ForeignKey(User)
@@ -151,8 +151,8 @@ class Message(models.Model):
 
 class Conversation(models.Model):
 
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, default=ContentType.objects.get(app_label="DevClear", model="organization"))
+    object_id = models.PositiveIntegerField(default=1)
     receiver = generic.GenericForeignKey('content_type', 'object_id')
     #message_set to access messages
     user = models.ForeignKey(User)
