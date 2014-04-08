@@ -12,9 +12,10 @@
 
         <!-- May have to activate javascript, look at bootstrap docs if problem-->
         <ul id="profile" class="nav nav-pills" style="padding-bottom: 10px">
-            <li class="active"><a href="#{{ user.first_name }}" data-toggle="tab">{{ user.first_name }}</a></li>
             {% for profile in admin_profiles %}
-                <li><a href="#{{ profile.name }}" data-toggle="tab">{{profile.name}}</a></li>
+                <li{% if forloop.counter == 1 %}
+                    class="active"{% endif %}>
+                    <a href="#{{ profile.name }}" data-toggle="tab">{{profile.name}}</a></li>
             {% endfor %}
 
         </ul>
@@ -22,46 +23,39 @@
 
 
         <div id="InboxTabContent" class="tab-content" style="max-height: 100%;overflow: auto">
-            <div class="tab-pane fade active in" id="{{ user.first_name }}" data-spy="scroll" data-target=".posts">
-                <div class="col-lg-12" style="padding-bottom: 20px">
-                    <h3>Personal Inbox </h3>
-                    <div class="col-lg-12 list-group">
-                        {% for convo in sender_convos.all %}
-                                    <a href="/home/inbox{{ convo.receiver.profile_url }}{{ convo.user.pk }}" class="list-group-item">
-                                        <li class="" style="list-style-type: none;">
-                                            <div class="row">
-                                                <div class="col-lg-2" >
-                                                    <img class="img" src="http://placehold.it/50x50" width="100%">
-                                                </div>
-                                                <div class="col-lg-10">
-                                                    <p style="margin-bottom: 0"><strong>{{ convo.user.get_full_name }}</strong><small class="pull-right">{{ message.timestamp }}</small></p>
-                                                    <p>{{ message.text }}</p>
-                                                </div>
-                                            </div>
-                                        </li></a>
-                               {% endfor %}
-                    </div>
-                </div>
-            </div>
             {% for profile in admin_profiles %}
-                <div class="tab-pane fade" id="{{ profile.name }}">
+                <div class="tab-pane fade {% if forloop.counter == 1 %}active in{% endif %}" id="{{ profile.name }}">
                     <div class="col-lg-12" style="padding-bottom: 20px">
                         <h3>{{ profile.name }}'s Inbox </h3>
                         <div class="col-lg-12 list-group">
                             <ul class="nav nav-tabs nav-stacked">
-                                {% for convo in profile.conversations.all %}
-                                    <a href="/home/inbox{{ profile.profile_url }}{{ convo.user.pk }}" class="list-group-item">
+                                {% for convo in profile.conversation_set.all %}
+                                    <a href="/home/inbox/{{ convo.pk }}" class="list-group-item">
                                         <li class="" style="list-style-type: none;">
                                             <div class="row">
                                                 <div class="col-lg-2" >
-                                                    <img class="img" src="http://placehold.it/50x50" width="100%">
+                                                    <img class="img" src="" width="100%">
                                                 </div>
-                                                <div class="col-lg-10">
-                                                    <p style="margin-bottom: 0"><strong>{{ convo.user.get_full_name }}</strong><small class="pull-right">{{ message.timestamp }}</small></p>
-                                                    <p>{{ message.text }}</p>
+                                                <div class="col-lg-10"><strong>
+                                                    <p style="margin-bottom: 0">
+                                                        {% for org in convo.organizations.all %}
+                                                            {{ org.name }},
+                                                        {% endfor %}
+                                                        {% for proj in convo.projects.all %}
+                                                            {{ proj.name }},
+                                                        {% endfor %}
+                                                        {% for comm in convo.communities.all %}
+                                                            {{ comm.name }},
+                                                        {% endfor %}</strong><br>
+                                                    {{ convo.message_set.reverse.first.sender.get_full_name }}<small class="pull-right">{{ convo.message_set.reverse.first.timestamp }}</small></p>
+                                                    <p>{{ convo.message_set.reverse.first.text|truncatewords:20 }}</p>
                                                 </div>
                                             </div>
                                         </li></a>
+                                {% empty %}
+                                    <li class="list-group-item" style="list-style-type: none;">
+                                        There aren't any conversations for {{ profile.name }} currently!
+                                    </li>
                                 {% endfor %}
 
                             </ul>
@@ -77,68 +71,128 @@
 
         </div>
     </div>
-
-    </div>
-    </div>
 {% endblock %}
 
 {% block content %}
+    <div class="col-lg-9">
+        {% if conversation %}
 
-    <div id="conversation" class="col-lg-8" style = "height: 80%">
-        <div><h3 style="text-align: center"></h3></div>
-        <div class="container col-lg-12" style= "max-height: 90%; margin-bottom:20px; overflow: auto" id="messages">
-            {% for message in conversation %}
-
-                {% if  user == message.sender %}
-                    <div id="message" class="row">
-                        <div class="col-lg-10">
-                            <strong class="pull-right">{{ message.sender.get_full_name }}</strong><br>
-                            <p class="pull-left" style="margin-bottom: 2px;text-align: right">{{ message.text }}</p>
-                            <p class="pull-right" style="font-size:75%; margin-bottom:20px">{{ message.timestamp }}</p>
-                        </div>
-                        <div class="col-lg-1">
-                            <img class="img" src=http://placehold.it/260x180" width="100%">
-                        </div>
-                    </div>
-                {% else %}
-                    <div id="message" class="row">
-                        <div class="col-lg-1">
-                            <!-- change image to org/user who made the post! -->
-                            <img class="img" src=http://placehold.it/260x180" width="100%">
-                        </div>
-
-                        <div class="col-lg-10">
-                            <strong class="pull-left">{{ message.sender.get_full_name }}</strong><br>
-                            <p class="pull-right" style="margin-bottom: 2px;">{{ message.text }}</p>
-                            <p class= "pull-left" style="font-size:75%; margin-bottom:20px">{{ message.timestamp }}</p>
-
-                        </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
+            <div id="header" class="col-lg-12" style="text-align:center; padding-bottom: 20px">
+                <h2>Conversation between
+                    {% for prof in convo_profiles %}
+                        {% if forloop.revcounter0 != 0 %}
+                            <a href={{ prof.profile_url }}>{{prof.name}}</a>,
+                        {% else %}
+                            <a href={{ prof.profile_url }}>{{prof.name}}</a>
+                        {% endif %}
+                    {% endfor %}        </h2>
 
 
-        </div>
+            </div>
 
-        <div class="col-lg-12 well well-sm">
-            <div class="row">
-                <div class="col-lg-2">
-                    <img class="img" src="" width="100%">
+            <div id="conversation" class="col-lg-12" style = "height: 80%">
+                <div><h3 style="text-align: center"></h3></div>
+                <div class="container col-lg-12" style= "max-height: 90%; margin-bottom:20px; overflow: auto" id="messages">
+                    {% for message in conversation %}
+
+                        {% if  user == message.sender %}
+                            <div id="message" class="row">
+                                <div class="col-lg-9 col-lg-offset-1 well well-sm">
+
+                                    <p class="pull-left" style="margin-bottom: 2px;text-align: right">{{ message.text }}</p><br>
+                                    <p class="pull-left" style="font-size:75%; margin-bottom:20px">{{ message.timestamp }}</p>
+                                </div>
+                                <div class="col-lg-1">
+                                    <img class="img" src=http://placehold.it/260x180" width="100%">
+                                    <strong class="pull-right">{{ message.sender.get_full_name }}</strong><br>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div id="message" class="row">
+                                <div class="col-lg-1 ">
+                                    <!-- change image to org/user who made the post! -->
+                                    <img class="img" src=http://placehold.it/260x180" width="100%">
+                                    <strong class="pull-left">{{ message.sender.get_full_name }}</strong><br>
+
+                                </div>
+
+                                <div class="col-lg-9 well well-sm">
+                                    <p class="pull-right" style="margin-bottom: 2px;">{{ message.text }}</p><br>
+                                    <p class= "pull-right" style="font-size:75%; margin-bottom:20px">{{ message.timestamp }}</p>
+
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+
                 </div>
-                <div class="col-lg-9">
-                    <form method="post" name="message_form">
-                        <input type="hidden" name="type" value="message"/>
-                        {% render_field message_form.text class="input-sm" style="width: 80%" rows="3"%}
+
+                <div class="col-lg-12 well well-sm">
+                    <div class="row">
+
+                        <div class="col-lg-9">
+                            <div class="col-lg-2">
+
+
+                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#messageModal">
+                                    <span class ="glyphicon glyphicon-plus"></span> Group</button>
+
+                            </div>
+                            <div class="col-lg-10">
+
+                                <form method="post" name="message_form">
+                                    <input type="hidden" name="type" value="message"/>
+                                    {% render_field message_form.text class="input-sm" style="width: 80%" rows="3"%}
+                                    {%  csrf_token %}
+                                    <button type="submit" class="btn btn-primary pull-right">Post New Message</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+        {% else %}
+            <div class="col-lg-12 well well-sm"><h2><span class="glyphicon glyphicon-arrow-left"></span> Please select a conversation from your profile inboxes on the left side bar!</h2></div>
+        {% endif %}
+
+    </div>
+
+    <script type="text/javascript">
+        var objDiv = document.getElementById("messages");
+        objDiv.scrollTop = objDiv.scrollHeight;
+    </script>
+
+    <div class="modal" id="messageModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Add participant</h4>
+                </div>
+                <div class="modal-body">
+                    <form method="post" name="add_participant_form">
+                        <input type="hidden" name="type" value="add_participant"/>
                         {%  csrf_token %}
-                        <button type="submit" class="btn btn-primary pull-right">Post New Message</button>
+                        Select all profiles that you would like to add to the conversation
+                        <select multiple="multiple" id="add_profile" name="participants" style="width: 100%">
+                            {% for profile in all_profiles %}
+
+                                <option>{{ profile|class_name }}: {{ profile.name }}</option>
+                            {% endfor %}
+                        </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary pull-right">Send</button>
+                    <button type="button" class="btn" data-dismiss="modal">Cancel</button>
                     </form>
                 </div>
-            </div>
-        </div>
-
-
-    </div>
-
-    </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
 {% endblock %}

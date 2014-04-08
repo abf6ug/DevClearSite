@@ -34,22 +34,23 @@
         </div>
         {% has_perm user 'can_post' comm as member%}
         {% if member%}
+            {% if user != comm_lead %}
 
-            <div class="list-group">
-                <div class="list-group-item">
-                    No longer a member of {{ comm.name }}?
+                <div class="list-group">
+                    <div class="list-group-item">
+                        No longer a member of {{ comm.name }}?
+                    </div>
+                    <div class="list-group-item">
+                        <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to leave {{ comm.name }}?');">
+                            <input type="hidden" name="user" value="{{ user }}"/>
+                            <input type="hidden" name="type" value="remove"/>
+
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-block">Click to leave</button>
+                        </form>
+                    </div>
                 </div>
-                <div class="list-group-item">
-                    <form method="post" accept-charset="utf-8" name="remove" onsubmit="return confirm('Are you sure you want to leave {{ comm.name }}?');">
-                        <input type="hidden" name="user" value="{{ user }}"/>
-                        <input type="hidden" name="type" value="remove"/>
-
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger btn-block">Click to leave</button>
-                    </form>
-                </div>
-            </div>
-
+            {% endif %}
         {% else %}
             <div class="list-group">
                 <div class="list-group-item">
@@ -65,6 +66,52 @@
                 </div>
             </div>
 
+            {% if not member%}
+                {% if admin_profiles %}
+
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            Want to message {{ comm.name }}?
+                        </div>
+                        <div class="list-group-item">
+
+                            <button type="button" class="btn btn-success btn-block" data-toggle="modal" data-target="#messageModal">
+                                <span class ="glyphicon glyphicon-pencil"></span> Message</button>
+
+                        </div>
+                    </div>
+
+
+                    <div class="modal" id="messageModal" tabindex="-1" role="form" aria-labelledby="loginModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title" id="myModalLabel">Message to {{ comm.name }}</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="post" name="message_form">
+                                        <input type="hidden" name="type" value="message"/>
+                                        {% render_field message_form.text class="input-sm" style="width: 80%" rows="3"%}
+                                        {%  csrf_token %}
+                                        Please select which admin profile you would like to select from:
+                                        <select class="input-sm" id="id_associated_profile" name="profile" style="width: 100%">
+                                            {% for profile in admin_profiles %}
+                                                <option>{{ profile|class_name }}: {{ profile.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary pull-right">Send</button>
+                                    <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+                                    </form>
+                                </div>
+                            </div><!-- /.modal-content -->
+                        </div><!-- /.modal-dialog -->
+                    </div><!-- /.modal -->
+                {% endif %}
+            {% endif %}
 
         {% endif %}
 
@@ -261,7 +308,7 @@
                         <h4><a href="{{ proj.profile_url }}">{{ proj.name }}</a></h4>
                     </div>
                     <div>
-                        <img src="{{ MEDIA_URL }}{{ comm.profile_image.url }}" width = "100%">
+                        <img src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width = "100%">
                     </div>
                 </div>
                 <div class="col-lg-5">
@@ -315,13 +362,27 @@
                 <div class="panel-heading">Members</div>
                 <table class="table">
                     <tr>
-                        <th>Member name</th>
+                        <th>Member name</th><th></th>
                     </tr>
                     {% for member in members %}
                         <tr>
                             <td>{{ member.get_full_name }}</td>
 
+                            <td>
+                                {% if member != comm.comm_lead and user == comm_lead%}
+                                    <form method="post" accept-charset="utf-8" name="swap_admin" onsubmit="return confirm('Are you sure you want to revoke {{ member.get_full_name}}s privileges on {{ org.name }}?');">
+                                        <input type="hidden" name="user" value="{{ member.username }}"/>
+                                        <input type="hidden" name="type" value="swap_admin"/>
+
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-warning"><span
+                                                class="glyphicon glyphicon-retweet"></span></button>
+                                    </form>                        {% endif %}
+                            </td>
+
+
                         </tr>
+
 
                         {% empty %}<!-- Doesn't work because members isn't actually empty, we just filter results.  Look at generating admin and regular member list in view-->
                         <tr><td colspan="3">Sorry, there are no registered community members.</tr>
@@ -455,18 +516,16 @@
 
 {% block right_side_bar %}
     <div class="col-lg-2">
-        <h3> {{ org.name }} Projects </h3>
+        <h3> {{ comm.name }} Linked Projects </h3>
         <div class="project">
             <div class="list-group">
-                {% for proj in  org.project_set.all%}
+                {% for proj in  comm.project_set.all%}
                     <li class="list-group-item">
                         <h4 class="list-group-item-heading">
-                            <a href={{proj.profile_url}}>
-                                {{ proj.name }}</a></h4>
-
-                        <p class="list-group-item-text">
-                            <a href={{proj.sponsor_org.profile_url}}>
-                                {{ proj.sponsor_org.name }}</a></p>
+                            <h4 class="list-group-item-heading">
+                                <img src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="25%">
+                                <a href={{proj.profile_url}}>
+                                    {{ proj.name }}</a></h4>
                     </li>
                 {% endfor %}
             </div>

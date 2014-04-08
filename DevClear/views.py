@@ -11,10 +11,10 @@ from django.contrib.auth.models import User, Group
 from django.forms.models import model_to_dict
 from DevClear.models import Organization,  OrganizationForm,  OrganizationModForm, Post, PostForm, Image,  ImageForm, Message, MessageForm, \
     Project, ProjectForm, ProjectModForm, Community, CommunityForm, CommunityModForm, ProjCommLinkForm, Conversation
-from django.db.models import Max
+from django.db.models.query import QuerySet
 import datetime
 from django.contrib.contenttypes.generic import ContentType
-import object_permissions as perm
+from object_permissions import get_users_all
 
 
 ORG_MEMBER_PERMS = ['add_member', 'join_proj', 'can_post', 'can_comment']
@@ -37,6 +37,8 @@ COMM_MEMBER_PERMS = ['can_post', 'can_comment']
 
 COMM_LEAD_PERMS = COMM_MEMBER_PERMS + ['add_member', 'edit_comm', 'remove_member', 'post_as_comm', 'comment_as_comm',  'upload_image', 'delete_image',
               'delete_comment', 'delete_post', 'swap_admin', 'remove_comm']
+
+
 
 
 
@@ -75,24 +77,25 @@ def register(request):
 @login_required
 def home(request):
 
-    org_feed = []
-    proj_feed =[]
-
+    feed = []
 
     for org in request.user.organization_set.all():
         for post in org.posts.all():
-            org_feed.append(post)
+            feed.append(post)
 
 
     for proj in request.user.project_set.all():
         for post in proj.posts.all():
-            proj_feed.append(post)
+            feed.append(post)
 
 
+    for comm in request.user.community_set.all():
+        for post in comm.posts.all():
+            feed.append(post)
 
+    feed.sort(key=lambda x: x.timestamp, reverse=False)
 
-
-    return render_to_response('home.html', {'org_feed':org_feed, 'proj_feed': proj_feed},
+    return render_to_response('home.html', {'feed':feed},
                               context_instance=RequestContext(request))
 
 @login_required
@@ -147,9 +150,11 @@ def settings(request):
 
 
 @login_required
-def inbox(request, profile_name="", profile_type="", sender_id=""):
+def inbox(request, conv_id=""):
 
     admin_profiles = []
+    admin_convos = []
+    #create list of profiles user has admin rights to
     for profile in request.user.get_objects_all_perms(Organization, ORG_LOW_ADMIN_PERMS):
         admin_profiles.append(profile)
     for profile in request.user.get_objects_all_perms(Project, PROJ_LOW_ADMIN_PERMS):
@@ -158,42 +163,95 @@ def inbox(request, profile_name="", profile_type="", sender_id=""):
         admin_profiles.append(profile)
 
 
-    profile =None
-    if profile_type=="community":
-        profile=Community.objects.get(name=profile_name)
-    elif profile_type=="organization":
-        profile=Organization.objects.get(name=profile_name)
-    elif profile_type=="project":
-        profile=Project.objects.get(name=profile_name)
-
-    conversation=[]
-    message_form = MessageForm()
-    sender_convos = Conversation.objects.filter(user=request.user).all()
 
 
-    if profile != None:
-        sender = User.objects.get(pk=sender_id)
-        if request.user.has_object_perm('remove_member', profile) or request.user == sender:
-            for conv in profile.conversations.all():
-                if conv.user == sender:
-                    for message in conv.message_set.order_by('timestamp').all():
-                        conversation.append(message)
+    convo_msg_list =[]
+    convo_profiles=[]
+    all_profiles = []
+    message_form=None
+    conversation=None
+    if conv_id != "":
+        conversation = Conversation.objects.get(pk=conv_id)
+
+    if conversation != None:
+        message_form = MessageForm()
+        if request.user.has_perm('can_view', conversation):#restrain to only admins of tis conv
+
+            #create ordered message list
+            for message in conversation.message_set.order_by('timestamp').all():
+                convo_msg_list.append(message)
+
+            #create list of profiles in the conversation
+            for prof in conversation.organizations.all():
+                convo_profiles.append(prof)
+            for prof in conversation.projects.all():
+                convo_profiles.append(prof)
+            for prof in conversation.communities.all():
+                convo_profiles.append(prof)
+
+            #create list of addable profiles to the conversation
+            for prof in Organization.objects.all():
+                if prof not in convo_profiles:
+                    all_profiles.append(prof)
+            for prof in Project.objects.all():
+                if prof not in convo_profiles:
+                    all_profiles.append(prof)
+            for prof in Community.objects.all():
+                if prof not in convo_profiles:
+                    all_profiles.append(prof)
 
             if request.method == 'POST':
                 if request.POST.get("type") == "message":
                     message_form = MessageForm(request.POST)
                     if message_form.is_valid():
-                        for conv in profile.conversations.all():
-                            if conv.user == sender:
-                                msg = Message.create(request.user, profile, request.POST.get('text'), conv)
-                                msg.save()
-                return HttpResponseRedirect("/home/inbox" + profile.profile_url + sender_id )
+                        msg = Message.create(request.user, request.POST.get('text'), conversation)
+                        msg.save()
+
+                if request.POST.get("type") == "add_participant":
+                    participants = request.POST.getlist("participants")
+                    for prof in participants:
+                        temp = prof.split(': ')
+                        prof_type= temp[0]
+                        prof_name=temp[1]
+
+                        #get actual instance of profile from selection
+                        if prof_type=="Organization":
+                            prof_obj = Organization.objects.get(name=prof_name)
+                            conversation.organizations.add(prof_obj)
+                        elif prof_type=="Project":
+                            prof_obj = Project.objects.get(name=prof_name)
+                            conversation.projects.add(prof_obj)
+                        elif prof_type=="Community":
+                            prof_obj = Community.objects.get(name=prof_name)
+                            conversation.communities.add(prof_obj)
+
+                        #add viewing permissions to the new profile's admin users
+                        for temp_user in get_users_all(prof_obj, perms=['remove_member']):
+                            temp_user.set_perms(['can_view'], conversation)
+
+                return HttpResponseRedirect("/home/inbox/" + conv_id)
 
         else:
             return HttpResponseRedirect("/home/inbox/" )
 
 
-    return render_to_response('inbox.html', {'message_form':message_form, 'admin_profiles':admin_profiles, "sender_convos":sender_convos,"conversation":conversation}, context_instance=RequestContext(request))
+    return render_to_response('inbox.html', {'message_form':message_form,
+                                             'admin_profiles':admin_profiles,
+                                             "conversation":convo_msg_list,
+                                             "convo_profiles":convo_profiles,
+                                             "all_profiles":all_profiles,
+                                                }, context_instance=RequestContext(request))
+
+    #for prof in Organization.objects.all():
+     #           if prof not in convo_profiles:
+      #              all_profiles+(prof.__class__.__name__ + ": " + prof.name, prof.__class__.__name__ + ": " + prof.name)
+       #     for prof in Project.objects.all():
+        #        if prof not in convo_profiles:
+         #           all_profiles+(prof.__class__.__name__ + ": " + prof.name, prof.__class__.__name__ + ": " + prof.name)
+          #  for prof in Community.objects.all():
+           #     if prof not in convo_profiles:
+            #        all_profiles+(prof.__class__.__name__ + ": " + prof.name, prof.__class__.__name__ + ": " + prof.name)
+           # add_participants_form = MultipleChoiceField(widget=CheckboxSelectMultiple, choices=all_profiles)
 
 @login_required
 def create_project(request, org_name=""):
@@ -235,6 +293,9 @@ def create_project(request, org_name=""):
         'form': form,
         'org': sponsor_org,
         }, context_instance=RequestContext(request))
+
+
+
 
 @login_required
 def register_org(request):
@@ -294,7 +355,6 @@ def register_community(request):
 
 
 
-
             request.user.set_perms(COMM_LEAD_PERMS, community)
 
 
@@ -345,6 +405,72 @@ def profile_feed(request, org_name=""):
                                                },
                               context_instance=RequestContext(request))
 
+def send_message(user, receiver_profile, s_profile_string, msg_txt):
+    conversation = None
+    sender_profile = None
+
+
+    temp = s_profile_string.split(': ')
+    sender_prof_type= temp[0]
+    sender_prof_name=temp[1]
+
+    if sender_prof_type=="Organization":
+        sender_profile=Organization.objects.get(name=sender_prof_name)
+    elif sender_prof_type=="Project":
+        sender_profile=Project.objects.get(name=sender_prof_name)
+    elif sender_prof_type=="Community":
+        sender_profile=Community.objects.get(name=sender_prof_name)
+    else:
+        return HttpResponseRedirect('/home/')
+
+    for temp_convo in Conversation.objects.all():#check if convo exists
+        master_list= []
+        for prof in temp_convo.organizations.all():
+            master_list.append(prof)
+        for prof in temp_convo.projects.all():
+            master_list.append(prof)
+        for prof in temp_convo.communities.all():
+            master_list.append(prof)
+
+        if (sender_profile in master_list) and (receiver_profile in master_list) and (len(master_list)==2):
+            conversation=temp_convo
+
+
+    if conversation == None:
+        conversation = Conversation.create()
+        conversation.save()
+
+        r_prof_type = receiver_profile.__class__.__name__
+
+        if r_prof_type=="Organization":
+            conversation.organizations.add(receiver_profile)
+        elif r_prof_type=="Project":
+            conversation.projects.add(receiver_profile)
+        elif r_prof_type=="Community":
+            conversation.communities.add(receiver_profile)
+
+        for temp_user in get_users_all(receiver_profile, perms=['remove_member']):
+            temp_user.set_perms(['can_view'], conversation)
+            print "granting to receiver prof admins"
+
+        if sender_prof_type=="Organization":
+            conversation.organizations.add(sender_profile)
+        elif sender_prof_type=="Project":
+            conversation.projects.add(sender_profile)
+        elif sender_prof_type=="Community":
+            conversation.communities.add(sender_profile)
+
+        for temp_user in get_users_all(sender_profile, perms=['remove_member']):
+            temp_user.set_perms(['can_view'], conversation)
+            print "granting to sender prof admins"
+
+
+    conversation.save()
+    msg = Message.create(user, msg_txt, conversation)
+    msg.save()
+    return str(conversation.pk)
+
+
 @login_required
 def view_profile(request, org_name=""):
     org = Organization.objects.get(name=org_name)
@@ -356,7 +482,24 @@ def view_profile(request, org_name=""):
     post_form = PostForm()
     message_form = MessageForm()
 
+    admin_profiles=[]
+    for profile in request.user.get_objects_all_perms(Organization, ORG_LOW_ADMIN_PERMS):
+        admin_profiles.append(profile)
+    for profile in request.user.get_objects_all_perms(Project, PROJ_LOW_ADMIN_PERMS):
+        admin_profiles.append(profile)
+    for profile in request.user.get_objects_all_perms(Community, COMM_LEAD_PERMS):
+        admin_profiles.append(profile)
 
+    high_admin = []
+    low_admin = []
+    member = []
+    for user in org.members.all():
+        if user.has_object_perm('make_high_admin', org):
+            high_admin.append(user)
+        elif user.has_object_perm('make_low_admin', org):
+            low_admin.append(user)
+        else:
+            member.append(user)
 
     #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), ORG_HIGH_ADMIN_PERMS, org)
     #Organization.objects.get
@@ -365,19 +508,8 @@ def view_profile(request, org_name=""):
         if request.POST.get("type") == "message":
             message_form = MessageForm(request.POST)
             if message_form.is_valid():
-                profile = org
-                conversation = None
-                for conv in profile.conversations.all():
-                    if conv.user == request.user:
-                        conversation = conv
-
-                if conversation == None:
-                    conversation = Conversation.create(user=request.user, profile=profile)
-
-                conversation.save()
-                msg = Message.create(request.user, profile, request.POST.get('text'), conversation)
-                msg.save()
-                return HttpResponseRedirect("/home/inbox" + profile.profile_url + str(request.user.pk))
+                convo_id = send_message(request.user, org,  request.POST.get('profile'), request.POST.get('text'))
+                return HttpResponseRedirect("/home/inbox/" + str(convo_id))
 
 
         elif request.POST.get("type") == "delete_post":
@@ -416,10 +548,11 @@ def view_profile(request, org_name=""):
 
         elif request.POST.get("type") == "remove":
             user = User.objects.get(username=request.POST.get("user"))
-            org.members.remove(user)
-            user.revoke_all(org)
-            for proj in org.project_set.all():
-                user.revoke_all(proj)
+            if user not in high_admin or len(high_admin)>1:
+                org.members.remove(user)
+                user.revoke_all(org)
+                for proj in org.project_set.all():
+                    user.revoke_all(proj)
 
             #check permissions in html
 
@@ -429,8 +562,9 @@ def view_profile(request, org_name=""):
 
         elif request.POST.get("type") == "make_low_admin":
             user = User.objects.get(username=request.POST.get("user"))
+            for convo in org.conversation_set.all():
+                user.set_perms(['can_view'], convo)
             user.set_perms(ORG_LOW_ADMIN_PERMS, org)
-
 
         elif request.POST.get("type") == "downgrade_high_admin":
             user = User.objects.get(username=request.POST.get("user"))
@@ -439,6 +573,8 @@ def view_profile(request, org_name=""):
         elif request.POST.get("type") == "downgrade_low_admin":
             user = User.objects.get(username=request.POST.get("user"))
             user.set_perms(ORG_MEMBER_PERMS, org)
+            for convo in org.conversation_set.all():
+                user.revoke_all(convo)
             for proj in org.project_set.all():
                 if user.has_all_perms(proj, PROJ_HIGH_ADMIN_PERMS) or user.has_all_perms(proj, PROJ_LOW_ADMIN_PERMS):
                     print 'downgrade project perms'
@@ -464,6 +600,8 @@ def view_profile(request, org_name=""):
                 if not new_name == org.name:
                     if not Organization.objects.filter(name=new_name).count():
                         org.name = new_name
+                        org.profile_url = "/organization/" + new_name +"/"
+
                 if not new_tagline == org.tagline:
                     org.tagline = new_tagline
                 if not new_start_date == org.start_date :
@@ -488,19 +626,11 @@ def view_profile(request, org_name=""):
 
 
 
-    high_admin = []
-    low_admin = []
-    member = []
-    for user in org.members.all():
-        if user.has_object_perm('make_high_admin', org):
-            high_admin.append(user)
-        elif user.has_object_perm('make_low_admin', org):
-            low_admin.append(user)
-        else:
-            member.append(user)
+
 
 
     return render_to_response('profile.html', {'org': org,
+                                                'admin_profiles':admin_profiles,
 
                                                'response': response,
                                                'image_form':image_form,
@@ -524,32 +654,34 @@ def view_project_profile(request, proj_name=""):
     message_form = MessageForm()
     link_form = ProjCommLinkForm()
 
-    if request.method == 'POST':
+    admin_profiles=[]
+    for profile in request.user.get_objects_all_perms(Organization, ORG_LOW_ADMIN_PERMS):
+        admin_profiles.append(profile)
+    for profile in request.user.get_objects_all_perms(Project, PROJ_LOW_ADMIN_PERMS):
+        admin_profiles.append(profile)
+    for profile in request.user.get_objects_all_perms(Community, COMM_LEAD_PERMS):
+        admin_profiles.append(profile)
 
+
+
+    #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), ORG_HIGH_ADMIN_PERMS, org)
+    #Organization.objects.get
+    if request.method == 'POST':
         if request.POST.get("type") == "message":
             message_form = MessageForm(request.POST)
             if message_form.is_valid():
-                profile = proj
-                conversation = None
-                for conv in profile.conversations.all():
-                    if conv.user == request.user:
-                        conversation = conv
-
-                if conversation == None:
-                    conversation = Conversation.create(user=request.user, profile=profile)
-
-                conversation.save()
-                msg = Message.create(request.user, profile, request.POST.get('text'), conversation)
-                msg.save()
-                return HttpResponseRedirect("/home/inbox" + profile.profile_url + str(request.user.pk))
+                convo_id = send_message(request.user, proj,  request.POST.get('profile'), request.POST.get('text'))
+                return HttpResponseRedirect("/home/inbox/" + str(convo_id))
 
 
         elif request.POST.get('type') == "link":
             link_form = ProjCommLinkForm(request.POST)
             if link_form.is_valid():
                 for comm in proj.communities.all():
+                    print "removing"
                     proj.communities.remove(comm)
                 for comm in link_form.cleaned_data['communities']:
+                    comm=Community.objects.get(name=comm)
                     proj.communities.add(comm)
 
         elif request.POST.get("type") == "delete_post":
@@ -597,6 +729,8 @@ def view_project_profile(request, proj_name=""):
 
         elif request.POST.get("type") == "make_low_admin":
             user = User.objects.get(username=request.POST.get("user"))
+            for convo in proj.conversation_set.all():
+                user.set_perms(['can_view'], convo)
             user.set_perms(PROJ_LOW_ADMIN_PERMS, proj)
 
         elif request.POST.get("type") == "downgrade_high_admin":
@@ -605,6 +739,8 @@ def view_project_profile(request, proj_name=""):
 
         elif request.POST.get("type") == "downgrade_low_admin":
             user = User.objects.get(username=request.POST.get("user"))
+            for convo in proj.conversation_set.all():
+                user.revoke_all(convo)
             user.set_perms(PROJ_MEMBER_PERMS, proj)
 
         elif request.POST.get("type") == "remove_proj":
@@ -632,6 +768,7 @@ def view_project_profile(request, proj_name=""):
                 if not new_name == proj.name:
                     if not Project.objects.filter(name=new_name).count():
                         proj.name = new_name
+                        proj.profile_url = "/project/" + new_name +"/"
                 if not new_tagline == proj.tagline:
                     proj.tagline = new_tagline
                 if not new_website == proj.website:
@@ -679,6 +816,7 @@ def view_project_profile(request, proj_name=""):
                                                         'post_form': post_form,
                                                         'high_admin': high_admin,
                                                        'low_admin': low_admin,
+                                                       'admin_profiles':admin_profiles,
                                                        'members':member}, context_instance=RequestContext(request))
 @login_required()
 def view_community_profile(request, comm_name=""):
@@ -691,6 +829,15 @@ def view_community_profile(request, comm_name=""):
     post_form = PostForm()
     message_form = MessageForm()
 
+    admin_profiles=[]
+    for profile in request.user.get_objects_all_perms(Organization, ORG_LOW_ADMIN_PERMS):
+        admin_profiles.append(profile)
+    for profile in request.user.get_objects_all_perms(Project, PROJ_LOW_ADMIN_PERMS):
+        admin_profiles.append(profile)
+    for profile in request.user.get_objects_all_perms(Community, COMM_LEAD_PERMS):
+        admin_profiles.append(profile)
+
+
 
     #perm.set_user_perms(User.objects.get_by_natural_key('AustinFry'), ORG_HIGH_ADMIN_PERMS, org)
     #Organization.objects.get
@@ -698,19 +845,8 @@ def view_community_profile(request, comm_name=""):
         if request.POST.get("type") == "message":
             message_form = MessageForm(request.POST)
             if message_form.is_valid():
-                profile = comm
-                conversation = None
-                for conv in profile.conversations.all():
-                    if conv.user == request.user:
-                        conversation = conv
-
-                if conversation == None:
-                    conversation = Conversation.create(user=request.user, profile=profile)
-
-                conversation.save()
-                msg = Message.create(request.user, profile, request.POST.get('text'), conversation)
-                msg.save()
-                return HttpResponseRedirect("/home/inbox" + profile.profile_url +str(request.user.pk))
+                convo_id = send_message(request.user, comm,  request.POST.get('profile'), request.POST.get('text'))
+                return HttpResponseRedirect("/home/inbox/" + str(convo_id))
 
         elif request.POST.get("type") == "delete_post":
             post = Post.objects.get(pk=request.POST.get("post_id"))
@@ -747,12 +883,21 @@ def view_community_profile(request, comm_name=""):
 
         elif request.POST.get("type") == "remove":
             user = User.objects.get(username=request.POST.get("user"))
-            comm.members.remove(user)
-            user.revoke_all(comm)
+            if user != comm.comm_lead:
+                comm.members.remove(user)
+                user.revoke_all(comm)
 
         elif request.POST.get("type") == "swap_admin":
-            user = User.objects.get(username=request.POST.get("user"))
-            user.set_perms(COMM_LEAD_PERMS, comm)
+            for convo in comm.conversation_set.all():
+                comm.comm_lead.revoke_all(convo)
+            comm.comm_lead.set_perms(COMM_MEMBER_PERMS, comm)
+
+
+            comm.comm_lead = User.objects.get(username=request.POST.get("user"))
+            comm.save()
+            comm.comm_lead.set_perms(COMM_LEAD_PERMS, comm)
+            for convo in comm.conversation_set.all():
+                comm.comm_lead.set_perms(['can_view'], convo)
 
         elif request.POST.get("type") == "remove_comm":
             comm.delete()
@@ -773,6 +918,8 @@ def view_community_profile(request, comm_name=""):
                 if not new_name == comm.name:
                     if not Community.objects.filter(name=new_name).count():
                         comm.name = new_name
+                        comm.profile_url = "/community/" + new_name +"/"
+
                 if not new_tagline == comm.tagline:
                     comm.tagline = new_tagline
                 if not new_region == comm.region :
@@ -800,6 +947,6 @@ def view_community_profile(request, comm_name=""):
                                                'mod_form': mod_form,
                                                'post_form':post_form,
                                                'comm_lead': comm.comm_lead,
-
+                                                'admin_profiles': admin_profiles,
                                                'members': comm.members.all()},
                               context_instance=RequestContext(request))

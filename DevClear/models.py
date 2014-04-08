@@ -26,7 +26,6 @@ class Organization(models.Model):
 
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
-    conversations = generic.GenericRelation('Conversation')
 
     profile_url = models.CharField(max_length=70)
 
@@ -36,7 +35,6 @@ class Organization(models.Model):
 
     class Meta:
         ordering =('name',)
-
 
     @classmethod
     def create(cls, name, profile_image, short_description, tagline, start_date, description, website, profile_url):
@@ -69,11 +67,10 @@ class Project(models.Model):
 
     website = models.URLField()
 
-    communities = models.ManyToManyField('Community')
+    communities = models.ManyToManyField('Community', blank=True)
 
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
-    conversations = generic.GenericRelation('Conversation')
 
 
     profile_url = models.CharField(max_length=70)
@@ -109,7 +106,6 @@ class Community(models.Model):
 
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
-    conversations = generic.GenericRelation('Conversation')
 
 
     #needPost
@@ -135,32 +131,27 @@ class Community(models.Model):
 class Message(models.Model):
     text = models.TextField(max_length=2000)
     timestamp = models.DateTimeField()
-
-    content_type = models.ForeignKey(ContentType, default=ContentType.objects.get(app_label="DevClear", model="organization"))
-    object_id = models.PositiveIntegerField(default=1)
-    receiver = generic.GenericForeignKey('content_type', 'object_id')
-
     sender = models.ForeignKey(User)
+
     conversation = models.ForeignKey('Conversation')
 
     @classmethod
-    def create(cls, sender, profile, text, conversation):
-           message = cls(sender=sender, text=text, receiver=profile, timestamp=datetime.datetime.now(), conversation=conversation)
+    def create(cls, sender, text, conversation):
+           message = cls(sender=sender, text=text, timestamp=datetime.datetime.utcnow(), conversation=conversation)
 
            return message
 
 class Conversation(models.Model):
 
-    content_type = models.ForeignKey(ContentType, default=ContentType.objects.get(app_label="DevClear", model="organization"))
-    object_id = models.PositiveIntegerField(default=1)
-    receiver = generic.GenericForeignKey('content_type', 'object_id')
-    #message_set to access messages
-    user = models.ForeignKey(User)
+    communities = models.ManyToManyField(Community, blank=True)
+    organizations = models.ManyToManyField(Organization, blank=True)
+    projects = models.ManyToManyField(Project, blank=True)
 
+    #message_set to access messages
 
     @classmethod
-    def create(cls, user, profile):
-           conversation = cls(user=user, receiver=profile)
+    def create(cls):
+           conversation = cls()
            return conversation
 
 class Post(models.Model):
@@ -178,7 +169,7 @@ class Post(models.Model):
 
     @classmethod
     def create(cls, user, profile, text):
-       post = cls(user=user, content_object = profile, text=text, timestamp=datetime.datetime.now())
+       post = cls(user=user, content_object = profile, text=text, timestamp=datetime.datetime.utcnow())
 
        return post
 
@@ -298,6 +289,8 @@ register(['can_post', 'can_comment',
 
 
              ], Community, app_label='DevClear')
+
+register(['can_view'], Conversation, app_label='DevClear')
 
 
 

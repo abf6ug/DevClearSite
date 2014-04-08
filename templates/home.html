@@ -46,25 +46,41 @@
 
 {% block content %}
     <div class="col-lg-8">
-        <div class="col-lg-6" >
-            <div class="panel-heading"><h3>Organization Feed</h3></div>
+        <div class="col-lg-12" >
+            <div class="panel-heading"><h3>Post Feed</h3></div>
             <div class="panel-body" style="overflow: auto; max-height: 90%">
-                {% for post in org_feed|slice:":10" reversed%}
+                {% for post in feed|slice:":40" reversed%}
 
 
                     <div class="col-lg-12 well well-sm container">
 
-                        <div class="col-lg-4"><a href="/organization/{{ post.content_object.name }}/#{{ post.id }}">{{ post.content_object.name }}</a>
-                            <img src="{{ MEDIA_URL }}{{ post.content_object.profile_image.url }}" width="100%"/></div>
+                        <div class="col-lg-2" style="text-align: center">
 
-                        <div class="col-lg-6">
-                            {{ post.text }}<br>
-                            {{ post.user.get_full_name }}<br>
-                            {{ post.timestamp }}
+                            <div class="col-lg-12" style="text-align: center"><a href="{{ post.content_object.profile_url }}#{{ post.id }}">{{ post.content_object.name }}</a></div>
+                            <div class="col-lg-12"><img src="{{ MEDIA_URL }}{{ post.content_object.profile_image.url }}" height="150px"/></div>
+
                         </div>
-                        <div class="col-lg-6">
-                            {{  post.comments.all.count }} comment{{  post.comments.all.count|pluralize }}
+
+                        <div class="col-lg-10">
+                            <div class="col-lg-12">
+                                {{ post.text }}<br>
+                                <b>{{ post.user.get_full_name }}<br>
+                                    {{ post.timestamp }}<br>
+                                    {{post.comments.all.count }} comment{{  post.comments.all.count|pluralize }}</b><br><br>
+
+                                Most recent comment:<br><br>
+
+
+                            </div>
+                            <div class="col-lg-11 col-lg-offset-1 well well-sm">
+                                {% with post.comments.first as comment %}
+                                    {{ comment.text }}<br>
+                                    <b>{{ comment.user.get_full_name }}<br>
+                                    {{ comment.timestamp }}<br></b>
+                                {% endwith %}
+                            </div>
                         </div>
+
                     </div>
                 {% empty %}
                     Sorry, there are no recent updates on any of your projects.
@@ -72,31 +88,7 @@
             </div>
         </div>
 
-        <div class="col-lg-6">
-            <div class="panel-heading"><h3>Project Feed</h3></div>
-            <div class="panel-body" style="overflow: auto; max-height: 90%">
 
-                {% for post in proj_feed reversed%}<!--Ordering weird-->
-
-                    <div class="col-lg-12 well well-sm container">
-
-                        <div class="col-lg-4"><a href="/profile/{{ post.content_object.sponsor_org }}/{{ post.content_object.name }}/#{{ post.id }}">{{ post.content_object.name }}</a>
-                            <img src="{{ MEDIA_URL }}{{ post.content_object.profile_image.url }}" width="100%"/></div>
-
-                        <div class="col-lg-6">
-                            {{ post.text }}<br>
-                            {{ post.user.get_full_name }}<br>
-                            {{ post.timestamp }}
-                        </div>
-                        <div class="col-lg-6">
-                            {{  post.comments.all.count }} comment{{  post.comments.all.count|pluralize }}
-                        </div>
-                    </div>
-                {% empty %}
-                    Sorry, there are no recent updates on any of your projects.
-                {% endfor %}
-            </div>
-        </div>
     </div>
 {% endblock %}
 
@@ -113,11 +105,14 @@
                         <h4 class="list-group-item-heading"><a href="/organization/{{ org.name }}/">{{ org.name }}</a></h4>
                         <p class="list-group-item-text">{{ org.tagline }}</p>
                     </li>
+                    {% if forloop.revcounter0 == 0 %}
+                        <li class="list-group-item">
+                            Displaying {{ forloop.counter }} of {{ user.organization_set.all.count }}
+                        </li>
+                    {% endif %}
 
                 {% endfor %}
-                <li class="list-group-item">
-                    Displaying {{ forloop.counter }} of {{ user.organization_set.all.count }}
-                </li>
+
                 <div class="pull-right">
                     <a href="{% url "user_org_list" %}">Display all of your organizations</a>
                 </div>
@@ -137,6 +132,12 @@
                             <a href="/organization/{{ proj.sponsor_org.name }}/">
                                 {{ proj.sponsor_org.name }}</a></p>
                     </li>
+
+                    {% if forloop.revcounter0 == 0 %}
+                        <li class="list-group-item">
+                            Displaying {{ forloop.counter }} of {{ user.organization_set.all.count }}
+                        </li>
+                    {% endif %}
                 {% endfor %}
                 <div class="pull-right" style="padding-bottom: 10px">
                     <a href="{% url "user_proj_list" %}">Display all of your projects</a>
@@ -145,11 +146,11 @@
 
         </div>
         <div class="col-lg-12" style="padding-bottom: 10px; text-align: right">
-                <a href="{% url "all_org_list" %}"><button class="btn btn-info">Look through all organizations</button></a>
+            <a href="{% url "all_org_list" %}"><button class="btn btn-info">Look through all organizations</button></a>
         </div>
 
         <div class="col-lg-12" style="padding-bottom: 10px; text-align: right">
-                <a href="{% url "all_comm_list" %}"><button class="btn btn-success">Look through all communities</button></a>
+            <a href="{% url "all_comm_list" %}"><button class="btn btn-success">Look through all communities</button></a>
         </div>
 
 
