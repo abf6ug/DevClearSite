@@ -20,8 +20,35 @@
 
         <div class="panel" style="padding-bottom: 10px">
             <h4>A project sponsored by
-                <a href={{proj.sponsor_org.profile_url}}>{{ proj.sponsor_org.name }}</a></h4>
+                <a href="{{proj.sponsor_org.profile_url}}">{{ proj.sponsor_org.name }}</a></h4>
 
+        </div>
+
+        <div class="list-group">
+            <div class="list-group-item">
+                {% if proj.is_verified %}
+                    <h4 style="color: green">Verified!</h4>
+                    {% if user.is_staff %}
+                        <form method="post" accept-charset="utf-8" name="change_verification">
+                            <input type="hidden" name="type" value="change_verification"/>
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-thumbs-down"></span></button>
+                        </form>
+                    {% endif %}
+                {%  else  %}
+                    <h4 style="color: red">Not Verified</h4>
+                    {% if user.is_staff %}
+
+                        <form method="post" accept-charset="utf-8" name="change_verification">
+                            <input type="hidden" name="type" value="change_verification"/>
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-thumbs-up"></span></button>
+                        </form>
+                    {% endif %}
+
+                {% endif %}
+
+            </div>
         </div>
 
         {% has_perm user 'add_member' proj as member%}
@@ -40,7 +67,7 @@
                 {% endif %}
             </div>
 
-            {% if user not in high_admin or high_admin|length > 1 %}
+            {% if not user.is_staff and user not in high_admin or high_admin|length > 1 %}
 
                 <div class="list-group">
                     <div class="list-group-item">
@@ -807,10 +834,8 @@
                 {% for comm in  proj.communities.all%}
                     <li class="list-group-item">
                         <h4 class="list-group-item-heading">
-                            <h4 class="list-group-item-heading">
-                                <img src="{{ MEDIA_URL }}{{ comm.profile_image.url }}" width="25%">
-                                <a href={{comm.profile_url}}>
-                                    {{ comm.name }}</a></h4>
+                            <img src="{{ MEDIA_URL }}{{ comm.profile_image.url }}" width="25%">
+                            <a href="{{ comm.profile_url }}"> {{ comm.name }}</a></h4>
                     </li>
                 {% endfor %}
             </div>

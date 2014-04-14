@@ -9,25 +9,25 @@ from django.contrib.contenttypes import generic
 #add email, hq location, region, area of development, org landline/main phone
 class Organization(models.Model):
     name = models.CharField(max_length=50, unique=True)
-
     profile_image = models.ImageField(upload_to="organization/profile_image")
-
+    profile_url = models.CharField(max_length=70)
     members = models.ManyToManyField(User)
-    projects = models.ManyToManyField('Project', blank=True)
-
     tagline = models.CharField(max_length=100, blank=True)
-
-    start_date = models.DateField()
-
-    short_description = models.TextField(max_length=300)
-    description = models.TextField(max_length=2000)
-
-    website = models.URLField(blank=True)
-
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
+    description = models.TextField(max_length=2000)
+    is_verified = models.BooleanField(default=False)
 
-    profile_url = models.CharField(max_length=70)
+
+
+
+    projects = models.ManyToManyField('Project', blank=True)
+    start_date = models.DateField()
+    short_description = models.TextField(max_length=300)
+    website = models.URLField(blank=True)
+
+
+
 
 
     def __unicode__(self):
@@ -45,12 +45,20 @@ class Organization(models.Model):
 #add email, location, communities, region
 class Project(models.Model):
     name = models.CharField(max_length=50)
-
+    tagline = models.CharField(max_length=100)
     profile_image = models.ImageField(upload_to="project/profile_image")
-
     members = models.ManyToManyField(User)
-    sponsor_org = models.ForeignKey(Organization)
+    posts = generic.GenericRelation('Post')
+    images = generic.GenericRelation('Image')
+    description = models.TextField(max_length=2000)
+    profile_url = models.CharField(max_length=70)
+    is_verified = models.BooleanField(default=False)
 
+
+
+
+    sponsor_org = models.ForeignKey(Organization)
+    communities = models.ManyToManyField('Community', blank=True)
 
     scale = models.CharField(max_length=20)
 
@@ -58,22 +66,17 @@ class Project(models.Model):
     status = models.CharField(max_length=2,
                                       choices=STATUS_CHOICES,
                                       default='N')
-    tagline = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date= models.DateField()
 
-    description = models.TextField(max_length=2000)
     short_description = models.TextField(max_length=300)
 
     website = models.URLField()
 
-    communities = models.ManyToManyField('Community', blank=True)
-
-    posts = generic.GenericRelation('Post')
-    images = generic.GenericRelation('Image')
 
 
-    profile_url = models.CharField(max_length=70)
+
+
 
 
     def __unicode__(self):
@@ -95,25 +98,25 @@ class Community(models.Model):
     name  = models.CharField(max_length=50)
     profile_image = models.ImageField(upload_to="community/profile_image")
     tagline  = models.CharField(max_length=200)
-
-
     members = models.ManyToManyField(User, related_name='community_members')
+    posts = generic.GenericRelation('Post')
+    images = generic.GenericRelation('Image')
+    profile_url = models.CharField(max_length=70)
+    description = models.TextField(max_length=2000)
+    is_verified = models.BooleanField(default=False)
+
 
     region = models.CharField(max_length=50)#county? city? locale? coordinates?
     country = models.CharField(max_length=50)
 
     comm_lead = models.ForeignKey(User)
 
-    posts = generic.GenericRelation('Post')
-    images = generic.GenericRelation('Image')
+
 
 
     #needPost
 
-    profile_url = models.CharField(max_length=70)
 
-
-    description = models.TextField(max_length=2000)
 
     def __unicode__(self):
         return self.name

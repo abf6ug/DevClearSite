@@ -32,9 +32,36 @@
                 {{ comm.comm_lead.get_full_name }}
             </div>
         </div>
+
+        <div class="list-group">
+            <div class="list-group-item">
+                {% if comm.is_verified %}
+                    <h4 style="color: green">Verified!</h4>
+                    {% if user.is_staff %}
+                        <form method="post" accept-charset="utf-8" name="change_verification">
+                            <input type="hidden" name="type" value="change_verification"/>
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-thumbs-down"></span></button>
+                        </form>
+                    {% endif %}
+                {%  else  %}
+                    <h4 style="color: red">Not Verified</h4>
+                    {% if user.is_staff %}
+
+                        <form method="post" accept-charset="utf-8" name="change_verification">
+                            <input type="hidden" name="type" value="change_verification"/>
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-thumbs-up"></span></button>
+                        </form>
+                    {% endif %}
+
+                {% endif %}
+
+            </div>
+        </div>
         {% has_perm user 'can_post' comm as member%}
         {% if member%}
-            {% if user != comm_lead %}
+            {% if user != comm_lead  and not user.is_staff%}
 
                 <div class="list-group">
                     <div class="list-group-item">

@@ -26,6 +26,8 @@ urlpatterns = patterns('',
                        url(r'^home/inbox/(?P<conv_id>\d+)$', 'DevClear.views.inbox', name='inbox'),
                        url(r'^home/inbox/$', 'DevClear.views.inbox', name='inbox'),
 
+                       url(r'^home/all_users/$', 'DevClear.views.all_users', name='all_users'),
+
 
                        url(r'^home/organizations_list/$', 'DevClear.views.user_org_list', name='user_org_list'),
                        url(r'^home/projects_list/$', 'DevClear.views.user_proj_list', name='user_proj_list'),
