@@ -44,6 +44,7 @@ INSTALLED_APPS = (
     'south',
     'object_permissions',
     'widget_tweaks',
+    'twilio',
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'

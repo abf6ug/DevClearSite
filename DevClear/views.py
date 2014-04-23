@@ -15,6 +15,7 @@ from django.db.models.query import QuerySet
 import datetime
 from django.contrib.contenttypes.generic import ContentType
 from object_permissions import get_users_all
+from twilio.rest import TwilioRestClient
 
 
 ORG_MEMBER_PERMS = ['add_member', 'join_proj', 'can_post', 'can_comment']
@@ -38,7 +39,9 @@ COMM_MEMBER_PERMS = ['can_post', 'can_comment']
 COMM_LEAD_PERMS = COMM_MEMBER_PERMS + ['add_member', 'edit_comm', 'remove_member', 'post_as_comm', 'comment_as_comm',  'upload_image', 'delete_image',
                                        'delete_comment', 'delete_post', 'swap_admin', 'remove_comm']
 
-
+ACCOUNT_SID = 'AC17309a34a052f2227486bfc589ee89bb'
+AUTH_TOKEN = '646636f342aee9db1b974e3e00eb2219'
+CLIENT = TwilioRestClient(ACCOUNT_SID, AUTH_TOKEN)
 
 
 
@@ -66,6 +69,10 @@ def register(request):
                 user.save()
                 user = authenticate(username=username, password=password1)
                 login(request, user)
+                message = CLIENT.sms.messages.create(body="Welcome to DevClear!  Is this your correct number",
+                    to=user.username,    # Replace with your phone number
+                    from_="+17572738197") # Replace with your Twilio number
+                print message.sid
                 return HttpResponseRedirect('/home/')
             else:
                 response="Sorry, your passwords didn't match"
@@ -513,6 +520,24 @@ def send_message(user, receiver_profile, s_profile_string, msg_txt):
     conversation.save()
     msg = Message.create(user, msg_txt, conversation)
     msg.save()
+
+    participants_string = ""
+    for org in conversation.organizations.all():
+        participants_string += org.name + " ,"
+    for proj in conversation.projects.all():
+        participants_string += proj.name + " ,"
+    for comm in conversation.communities.all():
+        participants_string += comm.name + " ,"
+
+
+
+    for comm in conversation.communities.all():
+        message = CLIENT.sms.messages.create(body="Convo with: " + participants_string +". From: " + msg.sender.get_full_name() + ". Body: " + msg.text,
+            to=comm.comm_lead.username,    # Replace with your phone number
+            from_="+17572738197") # Replace with your Twilio number
+        print message.sid
+
+
     return str(conversation.pk)
 
 
