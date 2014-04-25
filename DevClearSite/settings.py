@@ -87,9 +87,13 @@ DATABASES = {
     }
 }
 
-AUTHENTICATION_BACKENDS = {'django.contrib.auth.backends.ModelBackend', 'object_permissions.backend.ObjectPermBackend'}
+CUSTOM_USER_MODEL = 'DevClear.DevUser'
+
+AUTHENTICATION_BACKENDS = {'DevClear.auth_backends.CustomUserModelBackend', 'django.contrib.auth.backends.ModelBackend', 'object_permissions.backend.ObjectPermBackend', }
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
+
+
 
 LANGUAGE_CODE = 'en-us'
 

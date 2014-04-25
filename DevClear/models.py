@@ -5,13 +5,19 @@ from object_permissions import register
 import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.contrib.auth.models import User, UserManager
+
+class DevUser(User):
+    timezone = models.CharField(max_length=50, default='EST')
+    profile_image = models.ImageField(upload_to="users/profile_image", blank=True, default="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=50")
+    objects = UserManager()
 
 #add email, hq location, region, area of development, org landline/main phone
 class Organization(models.Model):
     name = models.CharField(max_length=50, unique=True)
     profile_image = models.ImageField(upload_to="organization/profile_image")
     profile_url = models.CharField(max_length=70)
-    members = models.ManyToManyField(User)
+    members = models.ManyToManyField(DevUser)
     tagline = models.CharField(max_length=100, blank=True)
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
@@ -47,7 +53,7 @@ class Project(models.Model):
     name = models.CharField(max_length=50)
     tagline = models.CharField(max_length=100)
     profile_image = models.ImageField(upload_to="project/profile_image")
-    members = models.ManyToManyField(User)
+    members = models.ManyToManyField(DevUser)
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
     description = models.TextField(max_length=2000)
@@ -98,7 +104,7 @@ class Community(models.Model):
     name  = models.CharField(max_length=50)
     profile_image = models.ImageField(upload_to="community/profile_image")
     tagline  = models.CharField(max_length=200)
-    members = models.ManyToManyField(User, related_name='community_members')
+    members = models.ManyToManyField(DevUser, related_name='community_members')
     posts = generic.GenericRelation('Post')
     images = generic.GenericRelation('Image')
     profile_url = models.CharField(max_length=70)
@@ -109,7 +115,7 @@ class Community(models.Model):
     region = models.CharField(max_length=50)#county? city? locale? coordinates?
     country = models.CharField(max_length=50)
 
-    comm_lead = models.ForeignKey(User)
+    comm_lead = models.ForeignKey(DevUser)
 
 
 
@@ -134,7 +140,7 @@ class Community(models.Model):
 class Message(models.Model):
     text = models.TextField(max_length=2000)
     timestamp = models.DateTimeField()
-    sender = models.ForeignKey(User)
+    sender = models.ForeignKey(DevUser)
 
     conversation = models.ForeignKey('Conversation')
 
@@ -165,9 +171,12 @@ class Post(models.Model):
 
     text = models.TextField(max_length=2000)
     timestamp = models.DateTimeField()
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(DevUser)
 
     comments = generic.GenericRelation('Post')
+
+    broadcast = models.BooleanField(default=False)
+    #Dropdown for need type
 
 
     @classmethod

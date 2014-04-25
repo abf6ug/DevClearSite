@@ -5,12 +5,12 @@ from django.views.generic import CreateView
 from django.template import RequestContext, loader
 from django.http import request, HttpResponseRedirect
 from django.contrib.auth import authenticate, login
+from DevClear.auth_backends import CustomUserModelBackend as CustomAuth
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User, Group
 from django.forms.models import model_to_dict
-from DevClear.models import Organization,  OrganizationForm,  OrganizationModForm, Post, PostForm, Image,  ImageForm, Message, MessageForm, \
-    Project, ProjectForm, ProjectModForm, Community, CommunityForm, CommunityModForm, ProjCommLinkForm, Conversation
+from DevClear.models import *
 from django.db.models.query import QuerySet
 import datetime
 from django.contrib.contenttypes.generic import ContentType
@@ -60,7 +60,7 @@ def register(request):
 
         if not User.objects.filter(username=username).count():
             if password1==password2:
-                user = User.objects.create_user(username,
+                user = DevUser.objects.create_user(username,
                                                 request.POST['email'], password1)
                 user.first_name = request.POST['fn']
                 user.last_name = request.POST['ln']
@@ -100,7 +100,11 @@ def home(request):
         for post in comm.posts.all():
             feed.append(post)
 
-    feed.sort(key=lambda x: x.timestamp, reverse=False)
+    for post in Post.objects.all():
+        if post.broadcast==True and post not in feed:
+            feed.append(post)
+
+    feed.sort(key=lambda x: x.comments.reverse().first().timestamp if (x.comments.first()!=None) else x.timestamp, reverse=False)
 
     return render_to_response('home.html', {'feed':feed},
                               context_instance=RequestContext(request))
@@ -237,6 +241,8 @@ def inbox(request, conv_id=""):
                     if message_form.is_valid():
                         msg = Message.create(request.user, request.POST.get('text'), conversation)
                         msg.save()
+                        send_message_SMS(conversation, msg)
+
 
                 if request.POST.get("type") == "add_participant":
                     participants = request.POST.getlist("participants")
@@ -366,7 +372,7 @@ def register_org(request):
                 organization.members.add(request.user)
 
             request.user.set_perms(ORG_HIGH_ADMIN_PERMS, organization)
-            for member in User.objects.all():
+            for member in DevUser.objects.all():
                 if member.is_staff:
                     member.set_perms(ORG_HIGH_ADMIN_PERMS, organization)
 
@@ -399,13 +405,13 @@ def register_community(request):
                 community.is_verified=True
             community.save()
 
-            if request.user.is_staff:
+            if not request.user.is_staff:
                 community.members.add(request.user)
 
 
 
             request.user.set_perms(COMM_LEAD_PERMS, community)
-            for member in User.objects.all():
+            for member in DevUser.objects.all():
                 if member.is_staff:
                     member.set_perms(COMM_LEAD_PERMS, community)
 
@@ -417,45 +423,23 @@ def register_community(request):
 
     return render_to_response('register_comm.html', {'form': form}, context_instance=RequestContext(request))
 
-#unused
-@login_required
-def profile_feed(request, org_name=""):
-    org = Organization.objects.get(name=org_name)
-    response = ''
-
-    post_form = None
-
-
-    if request.method == 'POST':
-        if request.POST.get("type") == "delete_post":
-            post = Post.objects.get(pk=request.POST.get("post_id"))
-            post.delete()
-
-        elif request.POST.get("type") == "comment":
-            post_form = PostForm(request.POST)
-            if post_form.is_valid():
-                feed_post = Post.objects.get(pk=request.POST.get('feed_post'))
-                post = Post.create(request.user, feed_post, request.POST.get('text'))
-                post.save()
-
-        elif request.POST.get("type") == "post":
-            post_form = PostForm(request.POST)
-            if post_form.is_valid():
-                post = Post.create(request.user, org, request.POST.get('text'))
-                post.save()
-
-        return HttpResponseRedirect(org.profile_url)
-
-    else:
-        post_form= PostForm()
+def send_message_SMS(conversation, msg):
+    participants_string = ""
+    for org in conversation.organizations.all():
+        participants_string += org.name + " ,"
+    for proj in conversation.projects.all():
+        participants_string += proj.name + " ,"
+    for comm in conversation.communities.all():
+        participants_string += comm.name + " ,"
 
 
-    return render_to_response('profile_feed.html', {'org': org,
 
-                                                    'response': response,
-                                                    'post_form':post_form,
-                                                    },
-                              context_instance=RequestContext(request))
+    for comm in conversation.communities.all():
+        message = CLIENT.sms.messages.create(body="Convo with: " + participants_string +". From: " + msg.sender.get_full_name() + ". Body: " + msg.text,
+            to=comm.comm_lead.username,    # Replace with your phone number
+            from_="+17572738197") # Replace with your Twilio number
+        print message.sid
+
 
 def send_message(user, receiver_profile, s_profile_string, msg_txt):
     conversation = None
@@ -521,22 +505,7 @@ def send_message(user, receiver_profile, s_profile_string, msg_txt):
     msg = Message.create(user, msg_txt, conversation)
     msg.save()
 
-    participants_string = ""
-    for org in conversation.organizations.all():
-        participants_string += org.name + " ,"
-    for proj in conversation.projects.all():
-        participants_string += proj.name + " ,"
-    for comm in conversation.communities.all():
-        participants_string += comm.name + " ,"
-
-
-
-    for comm in conversation.communities.all():
-        message = CLIENT.sms.messages.create(body="Convo with: " + participants_string +". From: " + msg.sender.get_full_name() + ". Body: " + msg.text,
-            to=comm.comm_lead.username,    # Replace with your phone number
-            from_="+17572738197") # Replace with your Twilio number
-        print message.sid
-
+    send_message_SMS(conversation, msg)
 
     return str(conversation.pk)
 
@@ -624,7 +593,7 @@ def view_profile(request, org_name=""):
             image.delete()
 
         elif request.POST.get("type") == "remove":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             if user not in high_admin or len(high_admin)>1:
                 org.members.remove(user)
                 user.revoke_all(org)
@@ -634,21 +603,21 @@ def view_profile(request, org_name=""):
                     #check permissions in html
 
         elif request.POST.get("type") == "make_high_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             user.set_perms(ORG_HIGH_ADMIN_PERMS, org)
 
         elif request.POST.get("type") == "make_low_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             for convo in org.conversation_set.all():
                 user.set_perms(['can_view'], convo)
             user.set_perms(ORG_LOW_ADMIN_PERMS, org)
 
         elif request.POST.get("type") == "downgrade_high_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             user.set_perms(ORG_LOW_ADMIN_PERMS, org)
 
         elif request.POST.get("type") == "downgrade_low_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             user.set_perms(ORG_MEMBER_PERMS, org)
             for convo in org.conversation_set.all():
                 user.revoke_all(convo)
@@ -804,26 +773,26 @@ def view_project_profile(request, proj_name=""):
             image.delete()
 
         elif request.POST.get("type") == "remove":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             proj.members.remove(user)
             user.revoke_all(proj)
 
         elif request.POST.get("type") == "make_high_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             user.set_perms(PROJ_HIGH_ADMIN_PERMS, proj)
 
         elif request.POST.get("type") == "make_low_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             for convo in proj.conversation_set.all():
                 user.set_perms(['can_view'], convo)
             user.set_perms(PROJ_LOW_ADMIN_PERMS, proj)
 
         elif request.POST.get("type") == "downgrade_high_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             user.set_perms(PROJ_LOW_ADMIN_PERMS, proj)
 
         elif request.POST.get("type") == "downgrade_low_admin":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             for convo in proj.conversation_set.all():
                 user.revoke_all(convo)
             user.set_perms(PROJ_MEMBER_PERMS, proj)
@@ -934,6 +903,7 @@ def view_community_profile(request, comm_name=""):
                 comm.is_verified=True
             comm.save()
 
+
         if request.POST.get("type") == "message":
             message_form = MessageForm(request.POST)
             if message_form.is_valid():
@@ -955,6 +925,8 @@ def view_community_profile(request, comm_name=""):
             post_form = PostForm(request.POST)
             if post_form.is_valid():
                 post = Post.create(request.user, comm, request.POST.get('text'))
+                if request.POST.get("broadcast"):
+                    post.broadcast=True
                 post.save()
 
         elif request.POST.get("type") == "add_user":
@@ -974,18 +946,18 @@ def view_community_profile(request, comm_name=""):
             image.delete()
 
         elif request.POST.get("type") == "remove":
-            user = User.objects.get(username=request.POST.get("user"))
+            user = DevUser.objects.get(username=request.POST.get("user"))
             if user != comm.comm_lead:
                 comm.members.remove(user)
                 user.revoke_all(comm)
 
         elif request.POST.get("type") == "swap_admin":
-            for convo in comm.conversation_set.all():
-                comm.comm_lead.revoke_all(convo)
-            comm.comm_lead.set_perms(COMM_MEMBER_PERMS, comm)
+            if not comm.comm_lead.is_staff:
+                for convo in comm.conversation_set.all():
+                    comm.comm_lead.revoke_all(convo)
+                comm.comm_lead.set_perms(COMM_MEMBER_PERMS, comm)
 
-
-            comm.comm_lead = User.objects.get(username=request.POST.get("user"))
+            comm.comm_lead = DevUser.objects.get(username=request.POST.get("user"))
             comm.save()
             comm.comm_lead.set_perms(COMM_LEAD_PERMS, comm)
             for convo in comm.conversation_set.all():

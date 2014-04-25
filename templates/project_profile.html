@@ -199,7 +199,7 @@
                 <div class="col-lg-12 well well-sm">
                     <div class="row">
                         <div class="col-lg-2">
-                            <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                            <img class="img" src="{{ MEDIA_URL }}{{ user.profile_image.url }}" width="100%">
                         </div>
                         <div class="col-lg-10">
                             <form method="post" name="post_form">
@@ -216,10 +216,10 @@
 
                 {% for post in proj.posts.all reversed %}
                     <div class="col-lg-12 well well-sm" id="{{ post.id }}">
-                        <div class="row">
+                        <div class="row" style="padding-bottom: 10px">
                             <div class="col-lg-2">
                                 <!-- change image to org/user who made the post! -->
-                                <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                                <img class="img" src="{{ MEDIA_URL }}{{ post.user.profile_image.url }}" width="100%">
                             </div>
                             <div class="col-lg-9">
 
@@ -252,7 +252,7 @@
                                     <div class="row">
                                         <div class="col-lg-2">
                                             <!-- change image to org/user who made the post! -->
-                                            <img class="img" src="{{ MEDIA_URL }}{{ proj.profile_image.url }}" width="100%">
+                                            <img class="img" src="{{ MEDIA_URL }}{{ comment.user.profile_image.url }}" width="100%">
                                         </div>
                                         <div class="col-lg-9">
                                             <strong style="font-size: 90%">{{ comment.user.get_full_name }}</strong><br>

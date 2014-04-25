@@ -97,13 +97,13 @@
 
                         {% if  user == message.sender %}
                             <div id="message" class="row">
-                                <div class="col-lg-9 col-lg-offset-1 well well-sm">
+                                <div class="col-lg-4 col-lg-offset-6 alert alert-info">
 
                                     <p class="pull-left" style="margin-bottom: 2px;text-align: right">{{ message.text }}</p><br>
                                     <p class="pull-left" style="font-size:75%; margin-bottom:20px">{{ message.timestamp }}</p>
                                 </div>
                                 <div class="col-lg-1">
-                                    <img class="img" src=http://placehold.it/260x180" width="100%">
+                                    <img class="img" src="{{ MEDIA_URL }}{{ message.sender.profile_image.url }}" width="100%">
                                     <strong class="pull-right">{{ message.sender.get_full_name }}</strong><br>
                                 </div>
                             </div>
@@ -111,12 +111,12 @@
                             <div id="message" class="row">
                                 <div class="col-lg-1 ">
                                     <!-- change image to org/user who made the post! -->
-                                    <img class="img" src=http://placehold.it/260x180" width="100%">
+                                    <img class="img" src="{{ MEDIA_URL }}{{ message.sender.profile_image.url }}" width="100%">
                                     <strong class="pull-left">{{ message.sender.get_full_name }}</strong><br>
 
                                 </div>
 
-                                <div class="col-lg-9 well well-sm">
+                                <div class="col-lg-4 alert alert-success">
                                     <p class="pull-right" style="margin-bottom: 2px;">{{ message.text }}</p><br>
                                     <p class= "pull-right" style="font-size:75%; margin-bottom:20px">{{ message.timestamp }}</p>
 

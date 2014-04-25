@@ -1,5 +1,5 @@
 from django.contrib import admin
-from DevClear.models import Organization, Project, Image, Post, Community, Message, Conversation
+from DevClear.models import *
 
 class OrganizationImageInline(admin.TabularInline):
     model = Image
@@ -17,5 +17,6 @@ admin.site.register(Image)
 admin.site.register(Message)
 admin.site.register(Conversation)
 
+admin.site.register(DevUser)
 
 

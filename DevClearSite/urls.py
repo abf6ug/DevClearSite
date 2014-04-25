@@ -23,7 +23,7 @@ urlpatterns = patterns('',
                        url(r'^home/$', 'DevClear.views.home', name='home'),
                        url(r'^home/settings/$', 'DevClear.views.settings', name='settings'),
 
-                       url(r'^home/inbox/(?P<conv_id>\d+)$', 'DevClear.views.inbox', name='inbox'),
+                       url(r'^home/inbox/(?P<conv_id>\d+)$', 'DevClear.views.inbox'),
                        url(r'^home/inbox/$', 'DevClear.views.inbox', name='inbox'),
 
                        url(r'^home/all_users/$', 'DevClear.views.all_users', name='all_users'),
